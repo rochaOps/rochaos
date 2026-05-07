@@ -1,0 +1,4605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>rochaOS — Luis Rocha · Cloud Infrastructure Engineer</title>
+  <meta name="description" content="Interactive terminal portfolio of Luis Rocha — Infrastructure & Automation Engineer based in Komaki, Japan. AWS SAA-C03 in progress. Open to remote roles and EU relocation." />
+  <meta name="theme-color" content="#0c0a0d" />
+  <meta name="color-scheme" content="dark" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="rochaOS — Luis Rocha" />
+  <meta property="og:description" content="Infrastructure & Automation Engineer · 17 years technical · AWS SAA-C03 in progress · Komaki, Japan · open to EU/remote" />
+  <meta property="og:type" content="website" />
+
+  <!-- Inline SVG favicon: terminal prompt style -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230c0a0d'/%3E%3Cpath d='M5 9 L11 16 L5 23' stroke='%23c4a7e7' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='14' y='20' width='12' height='2.5' rx='1' fill='%237dd3a8'/%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230c0a0d'/%3E%3Cpath d='M5 9 L11 16 L5 23' stroke='%23c4a7e7' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='14' y='20' width='12' height='2.5' rx='1' fill='%237dd3a8'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0c0a0d;
+      --bg-soft: #14101a;
+      --text: #e8e6e3;
+      --text-dim: #8a8590;
+      --text-faint: #4a4452;
+
+      --user: #c4a7e7;
+      --host: #7dd3a8;
+      --path: #6ba3e8;
+      --punct: #6a6373;
+      --accent: #c4a7e7;
+      --cursor: #e8e6e3;
+
+      --dir: #6ba3e8;
+      --file: #e8e6e3;
+      --exec: #7dd3a8;
+      --error: #e07b7b;
+      --warning: #e0c87b;
+      --info: #c4a7e7;
+      --string: #a5d99a;
+      --number: #e0c87b;
+      --key: #6ba3e8;
+
+      --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.025;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.4) 100%);
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    #terminal {
+      position: fixed;
+      inset: 0;
+      padding: 24px 28px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      cursor: text;
+    }
+
+    #terminal::-webkit-scrollbar { width: 6px; }
+    #terminal::-webkit-scrollbar-track { background: var(--bg); }
+    #terminal::-webkit-scrollbar-thumb { background: var(--text-faint); border-radius: 3px; }
+
+    #history { white-space: pre-wrap; word-break: break-word; }
+
+    .line { white-space: pre-wrap; word-break: break-word; }
+
+    .prompt-line {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+
+    .ps-user { color: var(--user); font-weight: 500; }
+    .ps-at { color: var(--punct); }
+    .ps-host { color: var(--host); font-weight: 500; }
+    .ps-colon { color: var(--punct); }
+    .ps-path { color: var(--path); }
+    .ps-dollar { color: var(--text); margin-right: 8px; }
+
+    .cmd-text { color: var(--text); }
+
+    .out-dir   { color: var(--dir); font-weight: 500; }
+    .out-file  { color: var(--file); }
+    .out-exec  { color: var(--exec); }
+    .out-error { color: var(--error); }
+    .out-warn  { color: var(--warning); }
+    .out-info  { color: var(--info); }
+    .out-dim   { color: var(--text-dim); }
+    .out-faint { color: var(--text-faint); }
+    .out-accent{ color: var(--accent); font-weight: 500; }
+
+    /* Clickable command links inside outputs */
+    .cmd-link {
+      color: var(--exec);
+      cursor: pointer;
+      border-bottom: 1px dotted var(--text-faint);
+      transition: color 0.12s, border-color 0.12s;
+    }
+    .cmd-link:hover {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .json-key    { color: var(--key); }
+    .json-string { color: var(--string); }
+    .json-number { color: var(--number); }
+    .json-bool   { color: var(--accent); }
+    .json-null   { color: var(--error); }
+    .json-punct  { color: var(--punct); }
+
+    #input-row {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      padding-bottom: 40vh;
+    }
+
+    #cmd-input {
+      flex: 1;
+      min-width: 100px;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: transparent;
+      caret-color: transparent;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.55;
+      padding: 0;
+    }
+
+    #cursor {
+      display: inline-block;
+      width: 0.6em;
+      height: 1.05em;
+      background: var(--cursor);
+      vertical-align: text-bottom;
+      animation: blink 1.05s step-end infinite;
+      position: relative;
+    }
+    /* When the cursor is in the middle, show the char under it */
+    #cursor::after {
+      content: attr(data-char);
+      position: absolute;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      color: var(--bg);
+      text-align: center;
+      line-height: 1.05em;
+      pointer-events: none;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    /* Selection: use accent color, theme-aware */
+    ::selection {
+      background: var(--accent);
+      color: var(--bg);
+    }
+    ::-moz-selection {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    /* Smooth fade-in for new content lines (subtle, doesn't slow down animations) */
+    .line {
+      animation: lineFadeIn 0.08s ease-out;
+    }
+    @keyframes lineFadeIn {
+      from { opacity: 0; transform: translateY(2px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Smooth boot → menu → shell transitions */
+    #menu-screen, #terminal {
+      animation: screenFadeIn 0.25s ease-out;
+    }
+    @keyframes screenFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    /* Subtle scrollbar across the app */
+    *::-webkit-scrollbar { width: 6px; height: 6px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: var(--text-faint); border-radius: 3px; }
+    *::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+    /* Disable line fadeIn during boot (boot has its own animation) */
+    #boot-content .b-line { animation: bootFadeIn 0.04s linear both; }
+
+    #input-mirror-before, #input-mirror-after {
+      color: var(--text);
+      white-space: pre;
+    }
+
+    /* ─── BOOT SCREEN ──────────────────────────────────────────── */
+    #boot-screen {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      color: #c8c4ce;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.5;
+      padding: 28px 32px;
+      overflow: hidden;
+      z-index: 200;
+    }
+
+    #boot-content {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    #boot-content .b-line {
+      animation: bootFadeIn 0.04s linear both;
+    }
+
+    @keyframes bootFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .b-ok    { color: #7dd3a8; }
+    .b-warn  { color: #e0c87b; }
+    .b-fail  { color: #e07b7b; }
+    .b-info  { color: #c4a7e7; }
+    .b-time  { color: #6a6373; }
+    .b-tag   { color: #6ba3e8; }
+    .b-dim   { color: #6a6373; }
+    .b-bright{ color: #e8e6e3; }
+    .b-bracket-l, .b-bracket-r { color: #6a6373; }
+    .b-logo  { color: #c4a7e7; }
+
+    #boot-skip-hint {
+      position: fixed;
+      bottom: 18px;
+      right: 24px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #4a4452;
+      letter-spacing: 0.05em;
+    }
+    #boot-skip-hint kbd {
+      padding: 1px 5px;
+      border: 1px solid #4a4452;
+      border-radius: 2px;
+      font-family: inherit;
+      font-size: 10px;
+      color: #6a6373;
+    }
+
+    /* ─── EDITOR FULLSCREEN OVERLAY ─────────────────────────── */
+    #editor-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.45;
+      z-index: 250;
+      display: flex;
+      flex-direction: column;
+    }
+    #editor-content {
+      flex: 1;
+      padding: 12px 16px;
+      overflow: hidden;
+      white-space: pre;
+      color: var(--text);
+    }
+    #editor-content .ed-line { white-space: pre; }
+    #editor-content .ed-tilde { color: var(--text-faint); }
+    #editor-content .ed-text  { color: var(--text); }
+    #editor-content .ed-warn  { color: var(--warning); }
+    #editor-content .ed-info  { color: var(--info); }
+    #editor-content .ed-dim   { color: var(--text-dim); }
+    #editor-content .ed-exec  { color: var(--exec); }
+
+    #editor-statusbar {
+      padding: 4px 16px;
+      background: var(--bg-soft);
+      color: var(--text);
+      font-size: 12px;
+      border-top: 1px solid var(--text-faint);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    #editor-statusbar .ed-mode   { color: var(--accent); font-weight: 500; }
+    #editor-statusbar .ed-file   { color: var(--text); }
+    #editor-statusbar .ed-hint   { color: var(--text-dim); margin-left: auto; font-size: 11px; }
+    #editor-statusbar .ed-cmd    { color: var(--exec); font-family: var(--font-mono); }
+
+    #editor-input {
+      width: 100%;
+      background: var(--bg-soft);
+      color: var(--text);
+      border: none;
+      border-top: 1px solid var(--text-faint);
+      outline: none;
+      padding: 6px 16px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+    }
+    @media (max-width: 640px) {
+      #editor-content { font-size: 12px; padding: 10px 12px; }
+      #editor-input { font-size: 16px; }
+    }
+
+    /* ─── MENU SCREEN ──────────────────────────────────────────── */
+    #menu-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.65;
+      padding: 28px 32px;
+      overflow-y: auto;
+      z-index: 150;
+    }
+
+    #menu-content {
+      max-width: 880px;
+      margin: 0 auto;
+    }
+
+    .m-banner-line { color: var(--accent); }
+    .m-rule        { color: var(--text-faint); }
+    .m-label       { color: var(--text-dim); }
+    .m-value       { color: var(--text); }
+    .m-status-ok   { color: var(--exec); }
+    .m-status-warn { color: var(--warning); }
+    .m-section     { color: var(--info); margin-top: 18px; margin-bottom: 4px; letter-spacing: 0.05em; }
+
+    .m-option {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      padding: 5px 8px;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: background 0.12s;
+      margin: 1px 0;
+    }
+    .m-option:hover, .m-option.is-active {
+      background: var(--bg-soft);
+    }
+    .m-option:hover .m-num, .m-option.is-active .m-num {
+      color: var(--accent);
+    }
+
+    .m-num {
+      color: var(--info);
+      min-width: 36px;
+      font-weight: 500;
+    }
+    .m-num-bracket { color: var(--text-faint); }
+    .m-title {
+      color: var(--text);
+    }
+    .m-desc {
+      color: var(--text-dim);
+      margin-left: auto;
+      font-size: 11px;
+    }
+
+    .m-prompt {
+      margin-top: 22px;
+      padding-top: 14px;
+      border-top: 1px solid var(--text-faint);
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .m-prompt-label {
+      color: var(--text-dim);
+    }
+    .m-prompt-input {
+      flex: 1;
+      display: flex;
+      align-items: baseline;
+      position: relative;
+      min-width: 60px;
+    }
+    #menu-input-mirror-before, #menu-input-mirror-after {
+      color: var(--text);
+      white-space: pre;
+    }
+    #menu-cursor {
+      display: inline-block;
+      width: 0.6em;
+      height: 1.05em;
+      background: var(--cursor);
+      vertical-align: text-bottom;
+      animation: blink 1.05s step-end infinite;
+    }
+    #menu-cmd-input {
+      flex: 1;
+      min-width: 30px;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: transparent;
+      caret-color: transparent;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.65;
+      padding: 0;
+    }
+
+    .m-error {
+      color: var(--error);
+      margin-top: 8px;
+    }
+    .m-info {
+      color: var(--text-dim);
+      font-size: 11px;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 640px) {
+      #menu-screen { padding-bottom: 30px; font-size: 12px; }
+      .m-desc { display: none; }
+      .m-option { padding: 9px 8px; }
+
+      /* iOS: any input <16px triggers auto-zoom on focus. Force 16px. */
+      #cmd-input, #menu-cmd-input {
+        font-size: 16px !important;
+      }
+
+      /* Keep visible mirror text at terminal size */
+      #input-mirror-before, #input-mirror-after {
+        font-size: 13px;
+      }
+      #menu-input-mirror-before, #menu-input-mirror-after {
+        font-size: 12px;
+      }
+
+      /* Smaller terminal padding on mobile */
+      #terminal { padding: 16px 14px; font-size: 13px; }
+      #boot-screen { padding: 14px 16px; font-size: 11px; }
+
+      /* Boot lines wrap nicely on mobile */
+      #boot-content .b-line { font-size: 11px; }
+
+      /* MOTD logo: hide complex Unicode block art on small screens, show simpler version */
+      .motd-logo-desktop { display: none; }
+      .motd-logo-mobile  { display: block; }
+    }
+
+    @media (min-width: 641px) {
+      .motd-logo-desktop { display: block; }
+      .motd-logo-mobile  { display: none; }
+    }
+
+    /* ─── MENU OUTPUT OVERLAY ─────────────────────────────── */
+    #menu-output {
+      margin-top: 18px;
+      border-top: 1px solid var(--text-faint);
+      padding-top: 16px;
+      display: none;
+    }
+    #menu-output.is-open {
+      display: block;
+    }
+    .mo-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .mo-title {
+      color: var(--accent);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+    .mo-cmd {
+      color: var(--text-dim);
+      font-size: 11px;
+    }
+    .mo-back {
+      margin-left: auto;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 4px 10px;
+      border: 1px solid var(--text-faint);
+      border-radius: 2px;
+      transition: all 0.12s;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      background: transparent;
+      font-family: inherit;
+    }
+    .mo-back:hover {
+      color: var(--text);
+      border-color: var(--text-dim);
+      background: var(--bg-soft);
+    }
+    .mo-body {
+      max-height: 60vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 8px;
+    }
+    .mo-body::-webkit-scrollbar { width: 4px; height: 4px; }
+    .mo-body::-webkit-scrollbar-track { background: transparent; }
+    .mo-body::-webkit-scrollbar-thumb { background: var(--text-faint); border-radius: 2px; }
+    /* Lines wrap in overlay so ASCII boxes don't overflow */
+    .mo-body .line { white-space: pre-wrap; word-break: break-word; }
+
+    #input-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: baseline;
+      position: relative;
+    }
+
+    /* ─── PRINT STYLES ────────────────────────────────────── */
+    /* If anyone hits print, give them a clean readable document */
+    @media print {
+      body { background: white; color: black; }
+      body::before, body::after { display: none; }
+      #boot-screen, #menu-screen, #editor-overlay { display: none !important; }
+      #terminal {
+        position: static;
+        padding: 20px;
+        overflow: visible;
+        height: auto;
+        background: white;
+        color: black;
+        font-size: 11px;
+      }
+      #input-row { display: none; }
+      .line, .ps-user, .ps-host, .ps-path, .ps-dollar,
+      .out-file, .out-info, .out-exec, .out-accent, .out-warn,
+      .out-dim, .out-faint, .cmd-text {
+        color: black !important;
+      }
+      .out-error { color: #b00 !important; }
+      #cursor { display: none; }
+      .prompt-line { color: #333 !important; }
+      a { color: #06c !important; text-decoration: underline !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="boot-screen">
+    <div id="boot-content"></div>
+    <div id="boot-skip-hint">press <kbd>Enter</kbd> · <kbd>Esc</kbd> · <kbd>s</kbd> to skip</div>
+  </div>
+
+  <div id="menu-screen" style="display:none">
+    <div id="menu-content"></div>
+  </div>
+
+  <div id="editor-overlay" style="display:none">
+    <div id="editor-content"></div>
+    <div id="editor-statusbar"></div>
+    <input id="editor-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+  </div>
+
+  <div id="terminal" style="display:none">
+    <div id="history"></div>
+
+    <div id="input-row">
+      <span class="prompt-line" id="prompt">
+        <span class="ps-user">luis</span><span class="ps-at">@</span><span class="ps-host">rochaOS</span><span class="ps-colon">:</span><span class="ps-path" id="ps-path">~</span><span class="ps-dollar">$</span>
+      </span>
+      <div id="input-wrapper">
+        <span id="input-mirror-before"></span><span id="cursor"></span><span id="input-mirror-after"></span>
+        <input id="cmd-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ─── EARLY THEME LOADER ───────────────────────────────────────────────────
+  // Apply saved theme BEFORE main script runs to avoid flash of default theme.
+  // Theme variable definitions are duplicated here (small) to run synchronously.
+  (function () {
+    try {
+      const key = localStorage.getItem('rochaOS:theme');
+      if (!key) return;
+      const VARS = {
+        'debian': null, // default, no override needed
+        'solarized-dark': {'--bg':'#002b36','--bg-soft':'#073642','--text':'#93a1a1','--text-dim':'#586e75','--text-faint':'#465458','--user':'#268bd2','--host':'#859900','--path':'#2aa198','--punct':'#586e75','--accent':'#cb4b16','--cursor':'#93a1a1','--dir':'#2aa198','--file':'#93a1a1','--exec':'#859900','--error':'#dc322f','--warning':'#b58900','--info':'#268bd2','--string':'#859900','--number':'#b58900','--key':'#268bd2'},
+        'gruvbox': {'--bg':'#282828','--bg-soft':'#3c3836','--text':'#ebdbb2','--text-dim':'#a89984','--text-faint':'#7c6f64','--user':'#fabd2f','--host':'#b8bb26','--path':'#83a598','--punct':'#928374','--accent':'#fe8019','--cursor':'#ebdbb2','--dir':'#83a598','--file':'#ebdbb2','--exec':'#b8bb26','--error':'#fb4934','--warning':'#fabd2f','--info':'#d3869b','--string':'#b8bb26','--number':'#d3869b','--key':'#83a598'},
+        'dracula': {'--bg':'#282a36','--bg-soft':'#373948','--text':'#f8f8f2','--text-dim':'#9090a0','--text-faint':'#6272a4','--user':'#bd93f9','--host':'#50fa7b','--path':'#8be9fd','--punct':'#6272a4','--accent':'#ff79c6','--cursor':'#f8f8f2','--dir':'#8be9fd','--file':'#f8f8f2','--exec':'#50fa7b','--error':'#ff5555','--warning':'#f1fa8c','--info':'#bd93f9','--string':'#f1fa8c','--number':'#ffb86c','--key':'#8be9fd'},
+        'tokyo-night': {'--bg':'#1a1b26','--bg-soft':'#24283b','--text':'#c0caf5','--text-dim':'#7d8497','--text-faint':'#565a72','--user':'#bb9af7','--host':'#9ece6a','--path':'#7aa2f7','--punct':'#565a72','--accent':'#7dcfff','--cursor':'#c0caf5','--dir':'#7aa2f7','--file':'#c0caf5','--exec':'#9ece6a','--error':'#f7768e','--warning':'#e0af68','--info':'#bb9af7','--string':'#9ece6a','--number':'#ff9e64','--key':'#7aa2f7'},
+        'catppuccin': {'--bg':'#1e1e2e','--bg-soft':'#313244','--text':'#cdd6f4','--text-dim':'#9399b2','--text-faint':'#6c7086','--user':'#cba6f7','--host':'#a6e3a1','--path':'#89b4fa','--punct':'#6c7086','--accent':'#f5c2e7','--cursor':'#cdd6f4','--dir':'#89b4fa','--file':'#cdd6f4','--exec':'#a6e3a1','--error':'#f38ba8','--warning':'#f9e2af','--info':'#cba6f7','--string':'#a6e3a1','--number':'#fab387','--key':'#89b4fa'},
+        'amber-crt': {'--bg':'#0d0700','--bg-soft':'#1a0f00','--text':'#ffb000','--text-dim':'#a06800','--text-faint':'#5c3c00','--user':'#ffcc44','--host':'#ff9000','--path':'#ffd966','--punct':'#7a5000','--accent':'#ffd966','--cursor':'#ffb000','--dir':'#ffd966','--file':'#ffb000','--exec':'#ffcc44','--error':'#ff5500','--warning':'#ffcc00','--info':'#ffcc44','--string':'#ffcc44','--number':'#ffcc00','--key':'#ffd966'},
+        'matrix': {'--bg':'#000000','--bg-soft':'#0a0a0a','--text':'#00ff41','--text-dim':'#008f11','--text-faint':'#005706','--user':'#00ff41','--host':'#39ff14','--path':'#00cc33','--punct':'#005706','--accent':'#39ff14','--cursor':'#00ff41','--dir':'#39ff14','--file':'#00ff41','--exec':'#00ff66','--error':'#ff0040','--warning':'#aaff00','--info':'#39ff14','--string':'#00ff66','--number':'#aaff00','--key':'#39ff14'},
+        'paper': {'--bg':'#fafaf7','--bg-soft':'#eeede9','--text':'#1c1c1c','--text-dim':'#666666','--text-faint':'#aaaaaa','--user':'#6a3ea1','--host':'#057a55','--path':'#1a56db','--punct':'#888888','--accent':'#6a3ea1','--cursor':'#1c1c1c','--dir':'#1a56db','--file':'#1c1c1c','--exec':'#057a55','--error':'#c81e1e','--warning':'#9f580a','--info':'#6a3ea1','--string':'#057a55','--number':'#9f580a','--key':'#1a56db'},
+      };
+      const vars = VARS[key];
+      if (!vars) return; // unknown or default
+      const root = document.documentElement;
+      for (const k in vars) root.style.setProperty(k, vars[k]);
+    } catch (e) {}
+  })();
+  </script>
+
+  <script>
+  (function () {
+  const terminal = document.getElementById('terminal');
+  const history = document.getElementById('history');
+  const input = document.getElementById('cmd-input');
+  const mirrorBefore = document.getElementById('input-mirror-before');
+  const mirrorAfter = document.getElementById('input-mirror-after');
+  const psPath = document.getElementById('ps-path');
+
+  // Load history from localStorage (rochaOS history persists across reloads)
+  const HIST_KEY = 'rochaOS:history';
+  let storedHistory = [];
+  try {
+    const raw = localStorage.getItem(HIST_KEY);
+    if (raw) storedHistory = JSON.parse(raw);
+    if (!Array.isArray(storedHistory)) storedHistory = [];
+  } catch (e) { storedHistory = []; }
+
+  const state = {
+    cwd: ['~'],
+    host: 'rochaOS',
+    // Per-host history (like ~/.bash_history on different machines).
+    // rochaOS persists; homeserver is in-memory only (resets on disconnect/reload).
+    histories: {
+      rochaOS:    storedHistory,
+      homeserver: [],
+    },
+    get history() { return this.histories[this.host]; },
+    set history(arr) { this.histories[this.host] = arr; },
+    histIndex: -1,
+    histDraft: '',
+    tabPrev: null,
+  };
+
+  function persistHistory() {
+    // Only the rochaOS history is persisted to disk
+    if (state.host !== 'rochaOS') return;
+    try {
+      const capped = state.history.slice(-200);
+      state.histories.rochaOS = capped;
+      localStorage.setItem(HIST_KEY, JSON.stringify(capped));
+    } catch (e) {}
+  }
+
+  // ─── VIRTUAL FILESYSTEM ────────────────────────────────────────────────────
+  const FS = {
+    '~': {
+      type: 'dir',
+      children: {
+
+        'README.md': { type: 'file', content:
+`# rochaOS — luis rocha's portfolio shell
+
+Welcome. This is an interactive terminal portfolio.
+
+You are currently logged in as luis@rochaOS, in the home directory.
+
+═══════════════════════════════════════════════════════════
+QUICK START
+═══════════════════════════════════════════════════════════
+
+  ls                  — list files in current directory
+  cd <dir>            — change directory (e.g. cd career)
+  cat <file>          — read a file (e.g. cat skills.json)
+  tree                — see the full filesystem structure
+  help                — list all available commands
+  whoami              — quick intro
+
+═══════════════════════════════════════════════════════════
+WHAT'S HERE
+═══════════════════════════════════════════════════════════
+
+  about/              who I am, where I am, what languages
+  career/             work history as log files
+  homelab/            current production-grade homelab
+  projects/           past and current technical projects
+  skills.json         technical skills as JSON
+  certifications.txt  AWS + courses
+  contact.vcf         how to reach me
+
+═══════════════════════════════════════════════════════════
+
+This site is a single static HTML file. View source if curious.
+For a "boring" classic resume view, use the menu.
+
+— luis@rochaOS, komaki/aichi/japan, 2026
+`
+        },
+
+        'about': { type: 'dir', children: {
+
+          'whoami.txt': { type: 'file', content:
+`luis paulo lopes da rocha
+35 years old · turning 36 in 2026
+
+infrastructure & automation engineer
+6+ years sysadmin background · brazilian
+based in komaki, aichi, japan since march 2020
+
+aws saa-c03 — in progress (60%)
+                [studying — not yet certified]
+
+electrical engineering degree (unip, são paulo, 2018)
+technical diploma in industrial automation (senai, 2011)
+
+currently: production team leader at brexa (komaki)
+target:    infrastructure / automation / cloud roles
+           remote · open to relocation worldwide
+           germany & eu particularly interesting
+`
+          },
+
+          'languages.txt': { type: 'file', content:
+`portuguese  ── native
+english     ── b2 · upper-intermediate · professional working
+japanese    ── working proficiency · daily use · jlpt n4 target
+
+— communication style: direct, technical, mechanism-first
+— prefers explanations over conclusions
+— skeptical of flattery, allergic to hype
+`
+          },
+
+          'location.txt': { type: 'file', content:
+`current
+═══════════════════════════════════════════
+  city:        komaki, aichi prefecture, japan
+  coords:      35.29°N 136.92°E
+  timezone:    JST (UTC+9)
+  since:       march 2020
+
+origin
+═══════════════════════════════════════════
+  city:        são paulo, brazil
+  raised:      são paulo metropolitan area
+  worked:      2009–2019 (brazil tech industry)
+
+target
+═══════════════════════════════════════════
+  open to:     remote roles · global
+               relocation · eu · germany preferred
+               also open to other regions
+
+  why germany: strong infrastructure culture
+               clear visa path for sysadmin/cloud
+               quality of life · stable economy
+`
+          }
+        }},
+
+        'career': { type: 'dir', children: {
+
+          'trajectory.md': { type: 'file', content:
+`# career trajectory
+
+A career is rarely linear. Mine took a 4-year detour through
+japanese precision manufacturing while I rebuilt my life
+post-pandemic and kept my technical edge through homelab work.
+
+## the path
+
+  2009 ──── industrial automation intern (compact, brazil)
+  2012 ──── promoted to technician · plc + scada
+  2013 ──── first sysadmin role (clínica jamal, são paulo)
+  2014 ──── side project: AFV brasil multi-site aws hosting
+  2015 ──── side project: SLAC hybrid cloud (on-prem + aws)
+  2018 ──── electrical engineering degree (unip)
+  2019 ──── left clínica jamal · prepared japan move
+  2020 ──── relocated to japan (mid-pandemic)
+            production operator · avance corp
+  2022 ──── started current homelab (opnsense + docker)
+  2024 ──── promoted to production team leader · brexa
+  2026 ──── aws SAA-C03 studying (60%)
+            agente-ligação project (ai phone calls in japanese)
+            ── pivoting back to cloud/infra full-time ──
+
+## what the gap means
+
+The 2020–2024 production roles were pragmatic, not aspirational.
+What stayed alive in parallel: the homelab, the AWS work,
+the architecture muscles. What I learned that I couldn't have
+learned in tech: japanese-language professional immersion,
+incident discipline at industrial scale, multilingual team
+leadership under shift constraints.
+
+cat career/2020-present-japan.log for the full picture.
+`
+          },
+
+          '2009-2012-automation.log': { type: 'file', content:
+`[2009-10-01]  joined compact automação industrial (são bernardo do campo, brazil) as intern
+[2010-Q1]     first plc programs · siemens s7-300 · automotive client
+[2010-Q3]     promoted from intern to junior technician
+[2011-Q1]     first scada/hmi project · elipse e3 · manufacturing line
+[2011-07]     senai technical diploma in industrial automation completed
+[2011-Q4]     allen-bradley plc commissioning · multiple client sites
+[2012-Q1]     began designing electrical control panels solo
+[2012-Q2]     authored client-facing technical documentation
+[2012-07-31]  left compact to focus on bigger sysadmin role
+
+skills acquired
+──────────────────────────────────────────
+  siemens s7-300/400 plc programming
+  rockwell allen-bradley plc
+  elipse e3 scada · hmi design
+  electrical control panel design + assembly
+  technical documentation in portuguese
+  field commissioning at automotive + manufacturing sites
+`
+          },
+
+          '2013-2019-clinica-jamal.log': { type: 'file', content:
+`[2013-03-01]  hired as sole IT analyst & sysadmin · clínica jamal (são paulo)
+              private healthcare group · HQ + 2 branch locations
+              17 staff users · 30+ endpoints · 100% me
+
+[2013-Q2]     standardized windows server with active directory
+              built dns + dhcp + group policy from scratch
+              deployed vmware esxi (free tier) to extend physical capacity
+
+[2014-Q1]     samba linux file server integrated into AD
+              vlan segmentation between clinical departments
+
+[2014-Q3]     side project: AFV brasil · multi-site aws ec2 hosting
+              custom AMI · route 53 · nginx reverse proxy · S3
+
+[2015-2016]   side project: SLAC hybrid cloud
+              on-prem ↔ aws via openvpn site-to-site
+              dual AD with replication (on-prem + ec2)
+              DFS replication · WDS/PXE workstation provisioning
+
+[2016-Q2]     deployed cacti with snmp polling for monitoring
+              CCTV + level 1 PABX support absorbed into role
+
+[2017-Q3]     iclin cloud-based healthcare ERP rolled out across all clinics
+
+[2019-02-28]  left clínica jamal · prepared international move
+
+what this role taught
+──────────────────────────────────────────
+  being the only IT person sharpens decisions fast
+  documentation is not optional when nobody backs you up
+  healthcare IT means uptime is non-negotiable
+  small budgets force creativity (esxi free tier, cacti, samba)
+  sole responsibility for a stack of 30+ devices is good prep
+  for anything cloud at scale
+`
+          },
+
+          '2015-2016-slac-aws.log': { type: 'file', content:
+`[2015-Q3 → 2016-Q2]
+freelance · sociedade latino-americana de coaching (SLAC)
+end-to-end design and delivery of dual-site corporate environment
+
+architecture
+──────────────────────────────────────────
+  on-prem (são paulo)              aws ec2 (us-east)
+  ┌─────────────────────────┐      ┌──────────────────┐
+  │ vmware esxi             │      │ ec2 windows 2012 │
+  │  ├ linux fw / openvpn   │ ===  │  AD secondary DC │
+  │  ├ win 2008 TMG proxy   │ vpn  │  DNS / DHCP      │
+  │  └ win 2012 AD primary  │      │  files (DFS R)   │
+  └─────────────────────────┘      └──────────────────┘
+                       │
+                  HP 1920 L3 switch
+                  HP 1820 access switches
+                  vlans + dhcp relay
+
+deliverables
+──────────────────────────────────────────
+  · openvpn site-to-site tunnel (15 mbps wan)
+  · dual AD domain controllers with replication
+  · DFS replication · nightly sync · bandwidth-throttled
+  · WDS/PXE unattended deployment · sub-15-min workstation provisioning
+  · golden image for win7 + office + line-of-business apps
+  · vlan segmentation across both sites
+  · full infrastructure documentation:
+      topology · AD · GPO · VPN · backup · DR procedures
+
+what worked
+──────────────────────────────────────────
+  - the bandwidth budget forced disciplined replication design
+  - documenting before deploying meant the handoff went clean
+  - hybrid AD pattern still serves clients running mixed envs
+
+what I would do differently in 2026
+──────────────────────────────────────────
+  - terraform everything (didn't exist in this form yet)
+  - aws SSO instead of dual local AD
+  - storage gateway instead of DFS over openvpn
+  - cloudwatch + central logs instead of sparse syslog
+`
+          },
+
+          '2020-present-japan.log': { type: 'file', content:
+`[2020-03-15]  arrived in japan · komaki, aichi prefecture
+              global pandemic · borders closing behind me
+              joined avance corporation as production operator
+
+[2020-2024]   four years operating automated industrial machinery
+              zero lost-time incidents
+              precision manufacturing environment
+              learned japanese on the job · daily immersion
+
+[2022-Q2]     launched current homelab
+              opnsense (replaced earlier pfsense)
+              docker compose stack · 15+ services
+              prometheus + grafana + loki observability
+
+[2023]        WireGuard VPN · cloudflare DDNS · suricata IDS
+              docker compose for infrastructure management
+              git-versioned everything
+
+[2024-05-01]  promoted to production team leader · brexa (komaki)
+              multilingual team · alternating shifts
+              direct coordination with japanese management
+              applied incident documentation discipline
+
+[2025]        intensive AWS study · saa-c03 prep
+              built AWS labs in side time
+
+[2026]        AWS SAA-C03 · in progress (60% complete)
+              [studying — exam not yet taken]
+
+[2026-Q1]     agente-ligação project launched
+              fastapi + whisper STT + LLM + voicevox TTS
+              automated japanese phone calls
+              SIM7600G-H GSM HAT integration in progress
+
+[2026-present] actively pursuing return to IT/cloud roles
+              priority: remote · eu (germany preferred) · global
+
+what these years actually were
+──────────────────────────────────────────
+  not a career break · a parallel build
+  the homelab is the proof
+  japanese immersion is the unexpected bonus
+  the discipline of factory work · transferable to ops
+`
+          }
+        }},
+
+        'homelab': { type: 'dir', children: {
+
+          'README.md': { type: 'file', content:
+`# homelab — production-grade self-hosted infrastructure
+
+started: 2022-Q2
+location: komaki, japan
+github: github.com/rochaOps/homelab
+
+## what it is
+
+A multi-subnet, SMB-equivalent environment running 24/7
+in my apartment. Network segmentation, full observability,
+infrastructure-as-code, automated backups, and 15+ services.
+
+## why it exists
+
+  1. keep cloud/infra muscles strong during my factory years
+  2. dogfood real production patterns at small scale
+  3. provide actual evidence of skills (not just claims)
+  4. host my own services without depending on big tech
+
+## hardware
+
+  router/firewall:  optiplex 7060 sff · intel i350-t4 quad NIC
+  switch:           cisco catalyst 2960 (L2)
+  ap:               unifi u6-lite (4 SSIDs · vlan trunk)
+  server:           threadripper · 32GB · debian 12
+  storage:          synology DS220+ NAS (RAID1 · NFS backup)
+
+## see also
+
+  cat homelab/topology.txt        ascii network diagram
+  cat homelab/docker-compose.yml  service stack snippet
+  cat homelab/opnsense.conf       firewall config snippet
+
+  or run:
+    render network                animated topology
+    ssh homeserver                connect to the server
+`
+          },
+
+          'topology.txt': { type: 'file', content:
+`                          ┌──────────────────┐
+                          │   internet       │
+                          │   softbank pppoe │
+                          └────────┬─────────┘
+                                   │
+                          ┌────────▼─────────┐
+                          │  opnsense 26.1   │
+                          │  optiplex 7060   │
+                          │  intel i350-t4   │
+                          │  suricata IDS    │
+                          └──┬─────┬─────┬───┘
+                             │     │     │
+                ┌────────────┘     │     └────────────┐
+                │                  │                  │
+       ┌────────▼────────┐  ┌──────▼──────┐  ┌────────▼────────┐
+       │ cisco 2960      │  │ unifi u6    │  │ homeserver      │
+       │ L2 LAN switch   │  │ 802.1Q wifi │  │ debian 12       │
+       └─┬───────────┬───┘  └──┬──┬──┬──┬─┘  │ docker host     │
+         │           │         │  │  │  │    └──────┬──────────┘
+         │           │       v20 v30 v40 v50        │
+    ┌────▼────┐  ┌───▼────┐                ┌────────┴────────┐
+    │ clients │  │ DS220+ │              services       observability
+    │ (lan)   │  │ NAS    │              ─────────       ─────────────
+    └─────────┘  └────────┘              nginx           prometheus
+                                         vaultwarden     grafana
+                                         jellyfin        loki
+                                         matrix          vector
+                                         adguard         alertmanager
+                                         sonarr/radarr   cadvisor
+                                         agente-ligação  node-exporter
+`
+          },
+
+          'docker-compose.yml': { type: 'file', content:
+`# /opt/docker/compose.yml (excerpt — 12 of 15+ services)
+# generated from real homelab · sensitive values redacted
+
+version: "3.8"
+
+networks:
+  homelab_net:
+    driver: bridge
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-rp
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./nginx/conf:/etc/nginx/conf.d:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    restart: unless-stopped
+    networks: [homelab_net]
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=30d"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: \${GRAFANA_PW}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+    command: -config.file=/etc/loki/loki-config.yml
+    restart: unless-stopped
+
+  vector:
+    image: timberio/vector:latest-alpine
+    volumes:
+      - ./vector/vector.toml:/etc/vector/vector.toml:ro
+      - /var/log:/var/log:ro
+    restart: unless-stopped
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    environment:
+      DOMAIN: https://vault.rochaluis.com
+      SIGNUPS_ALLOWED: "false"
+    volumes:
+      - vaultwarden_data:/data
+    restart: unless-stopped
+
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    volumes:
+      - jellyfin_config:/config
+      - /mnt/media:/media:ro
+    devices:
+      - /dev/dri:/dev/dri  # hardware transcoding
+    restart: unless-stopped
+
+  adguardhome:
+    image: adguard/adguardhome:latest
+    network_mode: host
+    volumes:
+      - adguard_work:/opt/adguardhome/work
+      - adguard_conf:/opt/adguardhome/conf
+    restart: unless-stopped
+
+  matrix-synapse:
+    image: matrixdotorg/synapse:latest
+    volumes:
+      - synapse_data:/data
+    environment:
+      SYNAPSE_SERVER_NAME: rochaluis.com
+      SYNAPSE_REPORT_STATS: "no"
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    restart: unless-stopped
+
+  agente-ligacao:
+    build: ./agente-ligacao
+    ports: ["8100:8100"]
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0  # SIM7600G-H GSM HAT
+    environment:
+      ANTHROPIC_API_KEY: \${ANTHROPIC_KEY}
+      VOICEVOX_URL: http://voicevox:50021
+    restart: unless-stopped
+
+  voicevox:
+    image: voicevox/voicevox_engine:cpu-ubuntu20.04-latest
+    expose: ["50021"]
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  vaultwarden_data:
+  jellyfin_config:
+  adguard_work:
+  adguard_conf:
+  synapse_data:
+`
+          },
+
+          'opnsense.conf': { type: 'file', content:
+`# /conf/config.xml — opnsense 26.1 (excerpt)
+# interface mapping and vlan summary
+
+<interfaces>
+  <wan>
+    <if>igb1</if>
+    <ipaddr>pppoe</ipaddr>
+    <gateway>WAN_PPPOE</gateway>
+    <descr>WAN · SoftBank</descr>
+  </wan>
+
+  <lan>
+    <if>igb2</if>
+    <ipaddr>10.10.1.1</ipaddr>
+    <subnet>24</subnet>
+    <descr>LAN · trusted clients</descr>
+  </lan>
+
+  <opt1>
+    <if>igb3</if>
+    <ipaddr>10.10.253.1</ipaddr>
+    <subnet>24</subnet>
+    <descr>OPT1 · 802.1Q trunk to UniFi U6-Lite</descr>
+  </opt1>
+
+  <opt2>
+    <if>igb4</if>
+    <ipaddr>10.10.6.1</ipaddr>
+    <subnet>24</subnet>
+    <descr>OPT2 · Homelab · HomeServer</descr>
+  </opt2>
+</interfaces>
+
+<vlans>
+  <vlan tag="20" if="igb3">
+    <descr>WiFi-Trusted · SSID: rocha (hidden)</descr>
+  </vlan>
+  <vlan tag="30" if="igb3">
+    <descr>WiFi-Guest · isolated · captive portal</descr>
+  </vlan>
+  <vlan tag="40" if="igb3">
+    <descr>IoT · 2.4GHz · isolated · no internet for some</descr>
+  </vlan>
+  <vlan tag="50" if="igb3">
+    <descr>TV-Media · isolated · jellyfin only</descr>
+  </vlan>
+</vlans>
+
+<system>
+  <hostname>opnsense</hostname>
+  <domain>rocha.lan</domain>
+  <timezone>Asia/Tokyo</timezone>
+</system>
+
+<!-- suricata IDS enabled on WAN, LAN, OPT1, OPT2 -->
+<!-- ET Open + abuse.ch rulesets, daily updates -->
+<!-- WireGuard VPN active on wg0 · cloudflare DDNS -->
+`
+          }
+        }},
+
+        'projects': { type: 'dir', children: {
+
+          'homelab.md': { type: 'file', content:
+`# project: homelab
+status:    ● running · 847 days uptime
+period:    2022 — present
+location:  komaki, japan
+repo:      github.com/rochaOps/homelab
+
+The headline project. See homelab/README.md for full details.
+
+stack
+─────────────────────────────────────────
+  network    opnsense 26.1 · cisco · unifi
+  compute    threadripper · debian 12 · 32GB
+  containers docker · 15+ services
+  storage    synology DS220+ NAS · NFS
+  observability  prometheus · grafana · loki · vector
+  security   suricata IDS · wireguard · vaultwarden
+  iac        docker compose · git
+  cdn/ssl    cloudflare
+
+what makes it real
+─────────────────────────────────────────
+  · runs my actual services (not a demo)
+  · public github repo with version history
+  · documented topology and DR procedures
+  · backups to NAS with retention policy
+  · regular restore tests
+  · 4 VLANs with strict firewall rules
+  · IDS catching real internet noise daily
+`
+          },
+
+          'agente-ligacao.md': { type: 'file', content:
+`# project: agente-ligação
+status:    ● running · beta
+period:    2026-Q1 — present
+domain:    agente.rochaluis.com
+
+AI-driven phone call automation for japanese-language interactions.
+Speech-to-text → LLM reasoning → neural TTS → telegram remote control.
+
+architecture
+─────────────────────────────────────────
+  fastapi + uvicorn  on port 8100
+  whisper (small)    real-time japanese STT
+  claude (haiku)     context-aware response generation
+  voicevox           neural japanese TTS (speaker 13)
+  telegram bot       session control · history · remote trigger
+  sqlite             persistent conversation history
+  SIM7600G-H HAT     physical phone calls (in progress)
+
+deployed
+─────────────────────────────────────────
+  homeserver (debian 12 · docker)
+  cloudflare → nginx RP → fastapi
+  exposed at agente.rochaluis.com
+
+why it exists
+─────────────────────────────────────────
+  living in japan as a foreigner means many phone-only
+  interactions in japanese (utility companies, government,
+  appointments). this automates the routine ones.
+  also a great excuse to wire up STT + LLM + TTS end-to-end.
+`
+          },
+
+          'slac-hybrid.md': { type: 'file', content:
+`# project: slac-hybrid-cloud
+status:    □ archived · delivered 2016
+period:    2015-Q3 — 2016-Q2
+client:    sociedade latino-americana de coaching (são paulo)
+
+End-to-end hybrid cloud connecting two physical sites
+to AWS EC2 via OpenVPN site-to-site tunnel.
+
+stack
+─────────────────────────────────────────
+  on-prem    vmware esxi · 3 VMs
+  cloud      aws ec2 (us-east) · windows 2012
+  vpn        openvpn site-to-site · 15 mbps WAN
+  ad         dual domain controllers · replication
+  storage    DFS replication · nightly sync · throttled
+  switching  HP 1920 L3 + HP 1820 access · vlans
+  deploy     WDS/PXE unattended · sub-15-min provisioning
+
+what worked
+─────────────────────────────────────────
+  · disciplined bandwidth budget on replication
+  · documentation-first approach made handoff clean
+  · hybrid AD pattern still relevant in 2026
+
+what I'd change in 2026
+─────────────────────────────────────────
+    · aws SSO instead of dual local AD
+  · storage gateway instead of DFS over openvpn
+  · centralized logs · cloudwatch instead of sparse syslog
+`
+          },
+
+          'afv-brasil.md': { type: 'file', content:
+`# project: afv-brasil-hosting
+status:    □ archived · delivered 2015
+period:    2014-Q3 — 2015-Q2
+client:    afv brasil
+
+Multi-client web hosting platform on AWS EC2.
+
+stack
+─────────────────────────────────────────
+  compute    ec2 instance · elastic IP
+  dns        route 53 · health checks · multi-domain
+  proxy      nginx reverse proxy · hostname routing
+  app        php + wordpress · custom AMI · cache layer
+  storage    S3 · static assets + snapshot backups
+  security   security groups · SSH key management
+
+what made it efficient
+─────────────────────────────────────────
+  · custom AMI = new client sites in minutes
+  · S3 backups separated from compute lifecycle
+  · webdesigner team had scoped SSH access only
+`
+          }
+        }},
+
+        'skills.json': { type: 'file', content:
+`{
+  "cloud": {
+    "provider": "AWS",
+    "certified": ["SAA-C03 (in progress)"],
+    "compute": ["EC2", "Lambda", "Auto Scaling"],
+    "storage": ["S3", "EBS", "EFS", "Glacier"],
+    "networking": ["VPC", "Route 53", "Security Groups", "ELB"],
+    "iam": ["IAM", "Roles", "Policies", "CloudWatch"],
+    "iac": ["Docker Compose", "Git"]
+  },
+  "automation": {
+    "languages": ["Bash", "boto3", "AI-assisted dev (Python logic + Claude)"],
+    
+    "ci_cd": ["GitHub Actions", "Git"],
+    "frameworks": ["FastAPI", "Uvicorn"]
+  },
+  "containers": {
+    "runtime": ["Docker", "Docker Compose"],
+    
+    "proxy": "Nginx Reverse Proxy"
+  },
+  "os_servers": {
+    "linux": ["Debian", "Ubuntu", "RHEL"],
+    "windows": ["Server 2012/2016", "Active Directory"],
+    "directory_services": ["DNS", "DHCP", "GPO", "Samba"],
+    "virtualisation": "VMware ESXi",
+    "storage": ["NFS", "DFS Replication", "RAID"]
+  },
+  "networking": {
+    "firewall": ["OPNsense", "pfSense"],
+    "switching": ["Cisco Catalyst", "HP ProCurve"],
+    "segmentation": ["VLANs", "802.1Q trunk"],
+    "ids": "Suricata",
+    "vpn": ["WireGuard", "OpenVPN site-to-site"]
+  },
+  "monitoring": {
+    "metrics": ["Prometheus", "Grafana"],
+    "logs": ["Loki", "Vector", "Cacti (legacy)"],
+    "exporters": ["Node Exporter", "SNMP Exporter", "cAdvisor"]
+  },
+  "security": {
+    "network": ["VLAN isolation", "firewall rules", "IDS"],
+    "access": ["SSH key management", "Cloudflare SSL/TLS"],
+    "secrets": ["Vaultwarden"],
+    "compliance": "GDPR awareness"
+  },
+  "industrial_legacy": {
+    "plc": ["Siemens S7-300/400", "Rockwell Allen-Bradley"],
+    "scada": "Elipse E3",
+    "panels": "Electrical control panel design + assembly"
+  },
+  "languages_spoken": {
+    "portuguese": "native",
+    "english": "B2 — professional working",
+    "japanese": "working — daily use, JLPT N4 target"
+  }
+}
+`
+        },
+
+        'certifications.txt': { type: 'file', content:
+`certifications
+═══════════════════════════════════════════════════════
+
+[○] AWS Solutions Architect — Associate · SAA-C03
+    In Progress · 60% complete · Amazon Web Services
+    [exam not yet taken]
+
+courses (no certification exam)
+──────────────────────────────────────────
+
+[○] Microsoft Official Course 20410
+    Installing & Configuring Windows Server 2012
+    Microsoft · March 2016
+
+[○] Microsoft Office Excel — Advanced
+    Microsoft Partner · February 2017
+
+[○] Microsoft Project — Project Management
+    Microsoft Partner · February 2017
+
+[○] Hardware & Network Maintenance
+    Microlins · June 2011
+
+education
+──────────────────────────────────────────
+
+  Bachelor of Electrical Engineering — Electronics
+  Universidade Paulista (UNIP) · São Paulo, Brazil
+  Graduated January 2018
+
+  Technical Diploma — Industrial Automation
+  SENAI Almirante Tamandaré · São Bernardo do Campo, Brazil
+  Completed July 2011
+
+═══════════════════════════════════════════════════════
+[○] = in progress / studying
+[○] = course completed (no exam)
+`
+        },
+
+        'contact.vcf': { type: 'file', content:
+`BEGIN:VCARD
+VERSION:3.0
+FN:Luis Paulo Lopes da Rocha
+N:Rocha;Luis;Paulo Lopes da;;
+TITLE:Infrastructure & Automation Engineer
+EMAIL;TYPE=INTERNET:luis@rochaluis.com
+URL:https://rochaluis.com
+URL:https://github.com/rochaOps
+URL:https://linkedin.com/in/rocha-luis
+ADR;TYPE=HOME:;;Komaki;Aichi;;;Japan
+NOTE:Open to remote roles & relocation worldwide. Germany / EU particularly interesting.
+END:VCARD
+`
+        }
+
+      }
+    }
+  };
+
+  // ─── PATH HELPERS ────────────────────────────────────────────
+  function resolvePath(pathStr) {
+    if (!pathStr || pathStr === '~' || pathStr === '/') return ['~'];
+    let parts;
+    if (pathStr.startsWith('~/')) {
+      parts = ['~', ...pathStr.slice(2).split('/').filter(Boolean)];
+    } else if (pathStr.startsWith('/')) {
+      parts = ['~', ...pathStr.slice(1).split('/').filter(Boolean)];
+    } else {
+      parts = [...state.cwd, ...pathStr.split('/').filter(Boolean)];
+    }
+    const out = [];
+    for (const p of parts) {
+      if (p === '.') continue;
+      if (p === '..') { if (out.length > 1) out.pop(); continue; }
+      out.push(p);
+    }
+    if (out.length === 0) out.push('~');
+    return out;
+  }
+
+  function walk(pathArr) {
+    if (pathArr[0] !== '~') return null;
+    let cur = FS['~'];
+    for (let i = 1; i < pathArr.length; i++) {
+      if (cur.type !== 'dir') return null;
+      const next = cur.children[pathArr[i]];
+      if (!next) return null;
+      cur = next;
+    }
+    return cur;
+  }
+
+  function pathDisplay(pathArr) {
+    if (pathArr.length === 1) return '~';
+    return '~/' + pathArr.slice(1).join('/');
+  }
+
+  // ─── DOM RENDER HELPERS ───────────────────────────────────────────────────
+  function appendHTML(html) {
+    const div = document.createElement('div');
+    div.className = 'line';
+    div.innerHTML = html;
+    getOutputTarget().appendChild(div);
+  }
+
+  function appendBlank() {
+    const div = document.createElement('div');
+    div.className = 'line';
+    div.innerHTML = '&nbsp;';
+    getOutputTarget().appendChild(div);
+  }
+
+  function renderPromptHistoryLine(cmd) {
+    const div = document.createElement('div');
+    div.className = 'prompt-line line';
+    const hostColor = state.host === 'homeserver' ? 'var(--path)' : 'var(--host)';
+    div.innerHTML =
+      '<span class="ps-user">luis</span>' +
+      '<span class="ps-at">@</span>' +
+      '<span class="ps-host" style="color:' + hostColor + '">' + esc(state.host) + '</span>' +
+      '<span class="ps-colon">:</span>' +
+      '<span class="ps-path"></span>' +
+      '<span class="ps-dollar">$</span>' +
+      '<span class="cmd-text"></span>';
+    div.querySelector('.ps-path').textContent = pathDisplay(state.cwd);
+    div.querySelector('.cmd-text').textContent = cmd;
+    getOutputTarget().appendChild(div);
+  }
+
+  function updatePromptPath() {
+    psPath.textContent = pathDisplay(state.cwd);
+  }
+
+  // Scroll the active output target (overlay body OR terminal)
+  function scrollToBottom() {
+    requestAnimationFrame(() => {
+      if (outputContainer) {
+        const moBody = outputContainer.closest('.mo-body') || outputContainer;
+        moBody.scrollTop = moBody.scrollHeight;
+        const ms = document.getElementById('menu-screen');
+        if (ms) ms.scrollTop = ms.scrollHeight;
+      } else if (terminal) {
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+    });
+  }
+
+  // Only scroll if user is already near the bottom — preserves user scroll position
+  function softScroll(threshold) {
+    const t = threshold == null ? 80 : threshold;
+    let scrollables = [];
+    if (outputContainer) {
+      const moBody = outputContainer.closest('.mo-body') || outputContainer;
+      scrollables.push(moBody);
+      const ms = document.getElementById('menu-screen');
+      if (ms) scrollables.push(ms);
+    } else if (terminal) {
+      scrollables.push(terminal);
+    }
+    for (const s of scrollables) {
+      const distFromBottom = s.scrollHeight - s.scrollTop - s.clientHeight;
+      if (distFromBottom < t) {
+        requestAnimationFrame(() => { s.scrollTop = s.scrollHeight; });
+      }
+    }
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  // ─── COMMANDS ────────────────────────────────────────────────
+  function cmdLs(args) {
+    const longFormat = args.some(a => /^-.*l/.test(a));
+    const targets = args.filter(a => !a.startsWith('-'));
+    const target = targets[0] || '.';
+    const pathArr = resolvePath(target);
+    const node = walk(pathArr);
+
+    if (!node) {
+      appendHTML(`<span class="out-error">ls: cannot access '${esc(target)}': No such file or directory</span>`);
+      return;
+    }
+
+    if (node.type === 'file') {
+      appendHTML(`<span class="out-file">${esc(target)}</span>`);
+      return;
+    }
+
+    const entries = Object.entries(node.children).sort(([a], [b]) => a.localeCompare(b));
+    if (entries.length === 0) { appendBlank(); return; }
+
+    const isProjectsDir = pathArr.join('/') === '~/projects' || target === 'projects' || target === 'projects/';
+
+    if (longFormat || isProjectsDir) {
+      if (!longFormat && isProjectsDir) {
+        appendHTML('<span class="out-dim">click a project to read it · or use cat projects/&lt;name&gt;.md</span>');
+        appendBlank();
+      } else {
+        appendHTML(`<span class="out-dim">total ${entries.length}</span>`);
+      }
+      for (const [name, child] of entries) {
+        const isDir = child.type === 'dir';
+        const cls = isDir ? 'out-dir' : (name.endsWith('.json') || name.endsWith('.yml') ? 'out-warn' : 'out-file');
+        const display = isDir ? name + '/' : name;
+        const isProjectFile = isProjectsDir && name.endsWith('.md');
+        const projName = isProjectFile ? name.replace('.md', '') : null;
+        if (longFormat) {
+          const perms = isDir ? 'drwxr-xr-x' : '-rw-r--r--';
+          const size = isDir ? '4096' : String(child.content.length);
+          const date = 'Apr 27 2026';
+          const clickable = isProjectFile ? ` class="cmd-link" data-project="${esc(projName)}"` : '';
+          appendHTML(
+            `<span class="out-dim">${perms}  luis  staff  ${String(size).padStart(6)}  ${date}  </span>` +
+            `<span class="${cls}"${clickable}>${esc(display)}</span>`
+          );
+        } else {
+          // Projects dir: one per line, clickable
+          if (isProjectFile) {
+            appendHTML(`<span class="${cls} cmd-link" data-project="${esc(projName)}">${esc(display)}</span>`);
+          } else {
+            appendHTML(`<span class="${cls}">${esc(display)}</span>`);
+          }
+        }
+      }
+    } else {
+      // Normal ls: all on one line
+      let html = '';
+      for (const [name, child] of entries) {
+        const isDir = child.type === 'dir';
+        const cls = isDir ? 'out-dir' : (name.endsWith('.json') || name.endsWith('.yml') ? 'out-warn' : 'out-file');
+        const display = isDir ? name + '/' : name;
+        html += `<span class="${cls}">${esc(display)}</span>   `;
+      }
+      appendHTML(html);
+    }
+  }
+
+  function cmdCd(args) {
+    const target = args[0];
+    if (!target || target === '~' || target === '/') {
+      state.cwd = ['~']; updatePromptPath(); return;
+    }
+    const pathArr = resolvePath(target);
+    const node = walk(pathArr);
+    if (!node) {
+      appendHTML(`<span class="out-error">cd: ${esc(target)}: No such file or directory</span>`); return;
+    }
+    if (node.type !== 'dir') {
+      appendHTML(`<span class="out-error">cd: ${esc(target)}: Not a directory</span>`); return;
+    }
+    state.cwd = pathArr;
+    updatePromptPath();
+  }
+
+  function cmdPwd() {
+    if (state.cwd.length === 1) {
+      appendHTML('<span class="out-info">/home/luis</span>');
+    } else {
+      appendHTML(`<span class="out-info">/home/luis/${state.cwd.slice(1).join('/')}</span>`);
+    }
+  }
+
+  function cmdTree(args) {
+    const target = args.find(a => !a.startsWith('-')) || '.';
+    const pathArr = resolvePath(target);
+    const root = walk(pathArr);
+    if (!root) {
+      appendHTML(`<span class="out-error">tree: ${esc(target)}: No such file or directory</span>`); return;
+    }
+    if (root.type !== 'dir') {
+      appendHTML(`<span class="out-file">${esc(target)}</span>`); return;
+    }
+
+    let dirs = 0, files = 0;
+    const lines = [];
+    lines.push(`<span class="out-dir">${esc(pathDisplay(pathArr))}</span>`);
+
+    function recurse(node, prefix) {
+      const entries = Object.entries(node.children).sort(([a, va], [b, vb]) => {
+        if (va.type !== vb.type) return va.type === 'dir' ? -1 : 1;
+        return a.localeCompare(b);
+      });
+      entries.forEach(([name, child], i) => {
+        const isLast = i === entries.length - 1;
+        const branch = isLast ? '└── ' : '├── ';
+        const isDir = child.type === 'dir';
+        const cls = isDir ? 'out-dir' : (name.endsWith('.json') || name.endsWith('.yml') ? 'out-warn' : 'out-file');
+        const display = isDir ? name + '/' : name;
+        lines.push(`<span class="out-faint">${prefix}${branch}</span><span class="${cls}">${esc(display)}</span>`);
+        if (isDir) {
+          dirs++;
+          recurse(child, prefix + (isLast ? '    ' : '│   '));
+        } else {
+          files++;
+        }
+      });
+    }
+    recurse(root, '');
+    lines.push('');
+    lines.push(`<span class="out-dim">${dirs} directories, ${files} files</span>`);
+
+    for (const l of lines) {
+      if (l === '') appendBlank();
+      else appendHTML(l);
+    }
+  }
+
+  // Mobile-friendly vertical topology (replaces wide ASCII tree)
+  const TOPOLOGY_MOBILE = `network topology · vertical view
+═════════════════════════════════════
+
+  ◉ internet  · softbank PPPoE
+  │
+  ▼
+  ◉ opnsense 26.1
+    optiplex 7060 · I350-T4
+    suricata IDS · all interfaces
+  │
+  ├─→ ◉ cisco 2960  (L2 LAN switch)
+  │   │
+  │   ├─◉ clients   (workstations · printer)
+  │   └─◉ DS220+    (synology NAS · NFS)
+  │
+  ├─→ ◉ unifi U6-lite  (802.1Q trunk)
+  │   ├─◉ VLAN 20  trusted wifi
+  │   ├─◉ VLAN 30  guest · isolated
+  │   ├─◉ VLAN 40  IoT · isolated
+  │   └─◉ VLAN 50  TV/media · isolated
+  │
+  └─→ ◉ homeserver  (debian 12 · docker)
+      │
+      ├── observability ──┐
+      │   ├ prometheus    │
+      │   ├ grafana       │
+      │   ├ loki          │
+      │   ├ vector        │
+      │   ├ alertmanager  │
+      │   ├ cadvisor      │
+      │   └ node-exporter │
+      │                   │
+      └── services ───────┘
+          ├ nginx · vaultwarden
+          ├ jellyfin · matrix
+          ├ adguard
+          ├ sonarr/radarr
+          └ agente-ligação
+
+═════════════════════════════════════
+`;
+
+  function cmdCat(args) {
+    if (args.length === 0) {
+      appendHTML('<span class="out-error">cat: missing operand</span>');
+      appendHTML('<span class="out-dim">usage: cat &lt;file&gt;</span>');
+      return;
+    }
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+    for (const target of args) {
+      const pathArr = resolvePath(target);
+      const node = walk(pathArr);
+      if (!node) {
+        appendHTML(`<span class="out-error">cat: ${esc(target)}: No such file or directory</span>`); continue;
+      }
+      if (node.type === 'dir') {
+        appendHTML(`<span class="out-error">cat: ${esc(target)}: Is a directory</span>`); continue;
+      }
+      const isJson = target.endsWith('.json');
+      const isYaml = target.endsWith('.yml') || target.endsWith('.yaml');
+      const isTopology = pathArr.join('/').endsWith('homelab/topology.txt');
+
+      if (isTopology && isMobile) {
+        // Mobile gets the vertical topology
+        const lines = TOPOLOGY_MOBILE.split('\n');
+        for (const line of lines) {
+          if (line === '') appendBlank();
+          else appendHTML(`<span class="out-file">${esc(line)}</span>`);
+        }
+      } else if (isJson) {
+        appendJsonHighlighted(node.content);
+      } else if (isYaml) {
+        appendYamlHighlighted(node.content);
+      } else {
+        const lines = node.content.split('\n');
+        for (const line of lines) {
+          if (line === '') appendBlank();
+          else appendHTML(`<span class="out-file">${esc(line)}</span>`);
+        }
+      }
+    }
+  }
+
+  function appendJsonHighlighted(text) {
+    const lines = text.split('\n');
+    for (const raw of lines) {
+      if (raw === '') { appendBlank(); continue; }
+      appendHTML(highlightJson(raw));
+    }
+  }
+
+  function highlightJson(line) {
+    let out = ''; let i = 0;
+    while (i < line.length) {
+      const c = line[i];
+      if (c === '"') {
+        let j = i + 1;
+        while (j < line.length && line[j] !== '"') {
+          if (line[j] === '\\') j += 2; else j++;
+        }
+        const str = line.slice(i, j + 1);
+        let k = j + 1;
+        while (k < line.length && line[k] === ' ') k++;
+        const isKey = line[k] === ':';
+        out += `<span class="${isKey ? 'json-key' : 'json-string'}">${esc(str)}</span>`;
+        i = j + 1; continue;
+      }
+      if (/[\d-]/.test(c) && (i === 0 || /[\s,:[\]{}]/.test(line[i-1]))) {
+        let j = i;
+        while (j < line.length && /[\d.eE+-]/.test(line[j])) j++;
+        out += `<span class="json-number">${esc(line.slice(i, j))}</span>`;
+        i = j; continue;
+      }
+      if (line.slice(i, i+5) === 'false') { out += `<span class="json-bool">false</span>`; i += 5; continue; }
+      if (line.slice(i, i+4) === 'true') { out += `<span class="json-bool">true</span>`; i += 4; continue; }
+      if (line.slice(i, i+4) === 'null') { out += `<span class="json-null">null</span>`; i += 4; continue; }
+      if ('{}[],:'.includes(c)) {
+        out += `<span class="json-punct">${esc(c)}</span>`; i++; continue;
+      }
+      out += esc(c); i++;
+    }
+    return out;
+  }
+
+  function appendYamlHighlighted(text) {
+    const lines = text.split('\n');
+    for (const raw of lines) {
+      if (raw === '') { appendBlank(); continue; }
+      if (/^\s*#/.test(raw)) { appendHTML(`<span class="out-dim">${esc(raw)}</span>`); continue; }
+      const m = raw.match(/^(\s*)([^:#\s][^:]*?):(\s*)(.*)$/);
+      if (m) {
+        const [, indent, key, sp, val] = m;
+        let valHtml = '';
+        if (val.startsWith('"') || val.startsWith("'")) valHtml = `<span class="json-string">${esc(val)}</span>`;
+        else if (/^\d/.test(val)) valHtml = `<span class="json-number">${esc(val)}</span>`;
+        else if (val === 'true' || val === 'false' || val === 'no' || val === 'yes') valHtml = `<span class="json-bool">${esc(val)}</span>`;
+        else valHtml = esc(val);
+        appendHTML(`${esc(indent)}<span class="json-key">${esc(key)}</span><span class="json-punct">:</span>${esc(sp)}${valHtml}`);
+        continue;
+      }
+      if (/^\s*-\s/.test(raw)) {
+        const dash = raw.match(/^\s*-/)[0];
+        appendHTML(`<span class="json-punct">${esc(dash)}</span>${esc(raw.slice(dash.length))}`);
+        continue;
+      }
+      appendHTML(esc(raw));
+    }
+  }
+
+  function cmdClear() { history.innerHTML = ''; }
+
+  // ─── Helpers for content commands ─────────────────────────────────────────
+  function header(title, subtitle) {
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+    const w = isMobile ? 36 : 59;
+    const rule = '═'.repeat(w);
+    appendHTML('<span class="out-accent">' + rule + '</span>');
+    appendHTML('<span class="out-accent">  ' + esc(title) + '</span>' + (subtitle ? '  <span class="out-dim">' + esc(subtitle) + '</span>' : ''));
+    appendHTML('<span class="out-accent">' + rule + '</span>');
+    appendBlank();
+  }
+
+  function section(title) {
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+    const w = isMobile ? 36 : 59;
+    const rule = '─'.repeat(w);
+    appendBlank();
+    appendHTML('<span class="out-info">▸ ' + esc(title) + '</span>');
+    appendHTML('<span class="out-faint">' + rule + '</span>');
+  }
+
+  function field(label, value, valueClass) {
+    const cls = valueClass || 'out-file';
+    const padded = label.padEnd(14);
+    appendHTML('  <span class="out-dim">' + esc(padded) + '</span><span class="' + cls + '">' + esc(value) + '</span>');
+  }
+
+  function bullet(text, prefix) {
+    const p = prefix || '·';
+    appendHTML('  <span class="out-faint">' + p + '</span> <span class="out-file">' + esc(text) + '</span>');
+  }
+
+  // ─── whoami (polished) ────────────────────────────────────────────────────
+  function cmdWhoami() {
+    appendHTML('<span class="out-accent">luis paulo lopes da rocha</span>  <span class="out-dim">· 35 yo · turning 36 in 2026</span>');
+    appendBlank();
+    appendHTML('  <span class="out-exec">infrastructure &amp; automation engineer</span>');
+    appendHTML('  <span class="out-dim">6+ years sysadmin · brazilian · komaki, japan since 2020</span>');
+    appendBlank();
+    field('certified',  'AWS SAA-C03 in progress (60%)', 'out-dim');
+    field('education',  'B.Eng. Electrical Engineering (UNIP, 2018)');
+    field('languages',  'pt native · en B2 · ja working');
+    field('current',    'Production Team Leader · Brexa (Komaki, JP)');
+    field('target',     'remote · relocation worldwide · germany/eu preferred', 'out-warn');
+    appendBlank();
+    appendHTML('<span class="out-dim">  $ </span><span class="cmd-link" data-cmd="resume">resume</span><span class="out-dim">          full CV breakdown</span>');
+    appendHTML('<span class="out-dim">  $ </span><span class="cmd-link" data-cmd="contact">contact</span><span class="out-dim">         get in touch</span>');
+    appendHTML('<span class="out-dim">  $ </span><span class="cmd-link" data-cmd="hire">hire</span><span class="out-dim">            tell me you\'re interested</span>');
+  }
+
+  // ─── resume ──────────────────────────────────────────────────
+  function cmdResume() {
+    header('LUIS PAULO LOPES DA ROCHA', 'infrastructure & automation engineer');
+
+    field('email',     'luis@rochaluis.com');
+    field('web',       'rochaluis.com');
+    field('github',    'github.com/rochaOps');
+    field('linkedin',  'linkedin.com/in/rocha-luis');
+    field('location',  'komaki, aichi, japan');
+    field('open to',   'remote · relocation worldwide · germany/eu preferred', 'out-warn');
+
+    section('SUMMARY');
+    appendHTML('  <span class="out-file">Cloud infrastructure engineer with 6+ years sysadmin experience.</span>');
+    appendHTML('  <span class="out-file">Track record of designing, automating, operating production environments.</span>');
+    appendHTML('  <span class="out-file">Delivered hybrid cloud projects connecting on-prem to AWS end-to-end.</span>');
+    appendHTML('  <span class="out-file">Currently operating advanced self-hosted homelab equivalent to small business.</span>');
+    appendHTML('  <span class="out-file">AWS SAA-C03 in progress. Bilingual PT/EN. Working JP.</span>');
+
+    section('EXPERIENCE');
+    appendHTML('  <span class="out-exec">Production Team Leader</span>  <span class="out-dim">· Brexa · Komaki, JP · 2024–present</span>');
+    bullet('Multilingual team across alternating shifts · incident discipline');
+    bullet('Maintained homelab + cloud projects in parallel');
+    bullet('Studying AWS SAA-C03 (60% complete, exam pending)');
+    appendBlank();
+    appendHTML('  <span class="out-exec">Production Operator</span>  <span class="out-dim">· Avance Corp · Komaki, JP · 2020–2024</span>');
+    bullet('Operated automated machinery · zero lost-time incidents over 4 years');
+    bullet('Launched current homelab (2022) with full observability stack');
+    appendBlank();
+    appendHTML('  <span class="out-exec">IT Support Analyst &amp; Sysadmin</span>  <span class="out-dim">· Clínica Jamal · São Paulo · 2013–2019</span>');
+    bullet('Sole IT for 17 staff users, 30+ endpoints, 3 sites');
+    bullet('Windows Server · AD · DNS · DHCP · GPO · VMware ESXi · Samba');
+    bullet('VLAN segmentation · Cacti SNMP monitoring · iClin healthcare ERP');
+    appendBlank();
+    appendHTML('  <span class="out-exec">Industrial Automation Technician</span>  <span class="out-dim">· Compact · São Bernardo · 2009–2012</span>');
+    bullet('Siemens S7 + Allen-Bradley PLC programming');
+    bullet('Elipse E3 SCADA/HMI · electrical control panel design');
+
+    section('FREELANCE PROJECTS');
+    appendHTML('  <span class="out-exec">SLAC Hybrid Cloud</span>  <span class="out-dim">· 2015–2016</span>');
+    bullet('On-prem ESXi ↔ AWS EC2 via OpenVPN · dual AD replication');
+    bullet('DFS Replication · WDS/PXE provisioning · HP switching · VLANs');
+    appendBlank();
+    appendHTML('  <span class="out-exec">AFV Brasil Hosting</span>  <span class="out-dim">· 2014–2015</span>');
+    bullet('AWS EC2 multi-client web hosting · custom AMI · Route 53 · S3');
+
+    section('HOMELAB · 2022–present');
+    bullet('OPNsense 26.1 · 5 VLANs · Suricata IDS · WireGuard VPN');
+    bullet('15+ Docker services · Prometheus + Grafana + Loki + Vector');
+    bullet('Docker Compose · git-versioned · Synology NFS backups');
+    bullet('agente-ligação: AI phone automation (FastAPI + Whisper + LLM + TTS)');
+
+    section('SKILLS');
+    field('cloud',      'AWS · Lambda · RDS · S3 · IAM · Route 53', 'out-exec');
+    field('automation', 'Bash · GitHub Actions · AI-assisted development (Python logic + Claude)');
+    field('containers', 'Docker · Docker Compose · Nginx');
+    field('networking', 'OPNsense · pfSense · Cisco/HP · WireGuard · Suricata');
+    field('monitoring', 'Prometheus · Grafana · Loki · Vector');
+    field('os',         'Linux (Debian/Ubuntu) · Windows Server · AD · ESXi');
+
+    section('CERTIFICATIONS');
+    appendHTML('  <span class="out-dim">○</span> <span class="out-file">AWS Solutions Architect — Associate</span>  <span class="out-dim">SAA-C03 · in progress (60%)</span>');
+
+    section('EDUCATION');
+    bullet('B.Eng. Electrical Engineering · UNIP · São Paulo · 2018');
+    bullet('Technical Diploma Industrial Automation · SENAI · 2011');
+
+    section('LANGUAGES');
+    field('portuguese', 'native', 'out-exec');
+    field('english',    'B2 — professional working proficiency');
+    field('japanese',   'working — daily use, JLPT N4 target', 'out-warn');
+
+    appendBlank();
+    appendHTML('<span class="out-dim">' + '═'.repeat(59) + '</span>');
+    appendHTML('<span class="out-dim">  print this · share · ssh me · just don\'t throw it away.</span>');
+    appendBlank();
+  }
+
+  // ─── certifications ──────────────────────────────────────────
+  function cmdCertifications() {
+    header('CERTIFICATIONS &amp; COURSES', 'verified credentials and completed training');
+
+    section('IN PROGRESS · exam not yet taken');
+    appendHTML('  <span class="out-exec">[●]</span> <span class="out-file">AWS Solutions Architect — Associate</span>');
+    appendHTML('      <span class="out-dim">SAA-C03 · Amazon Web Services · studying (60%)</span>');
+    appendBlank();
+
+    section('COURSES · completed, no certification exam');
+    appendHTML('  <span class="out-dim">[○]</span> <span class="out-file">Microsoft 20410 — Installing &amp; Configuring Windows Server 2012</span>');
+    appendHTML('      <span class="out-dim">Microsoft · March 2016</span>');
+    appendBlank();
+    appendHTML('  <span class="out-dim">[○]</span> <span class="out-file">Microsoft Office Excel — Advanced</span>');
+    appendHTML('      <span class="out-dim">Microsoft Partner · February 2017</span>');
+    appendBlank();
+    appendHTML('  <span class="out-dim">[○]</span> <span class="out-file">Microsoft Project — Project Management</span>');
+    appendHTML('      <span class="out-dim">Microsoft Partner · February 2017</span>');
+    appendBlank();
+    appendHTML('  <span class="out-dim">[○]</span> <span class="out-file">Hardware &amp; Network Maintenance</span>');
+    appendHTML('      <span class="out-dim">Microlins · June 2011</span>');
+
+    section('EDUCATION');
+    appendHTML('  <span class="out-exec">⌗</span> <span class="out-file">Bachelor of Electrical Engineering — Electronics</span>');
+    appendHTML('      <span class="out-dim">Universidade Paulista (UNIP) · São Paulo · January 2018</span>');
+    appendBlank();
+    appendHTML('  <span class="out-exec">⌗</span> <span class="out-file">Technical Diploma — Industrial Automation</span>');
+    appendHTML('      <span class="out-dim">SENAI Almirante Tamandaré · São Bernardo do Campo · July 2011</span>');
+
+    appendBlank();
+    appendHTML('<span class="out-faint">  [○] = in progress / studying     [○] = course only     [⌗] = degree</span>');
+    appendBlank();
+  }
+
+  // ─── skills ──────────────────────────────────────────────────
+  function cmdSkills() {
+    header('TECHNICAL SKILLS', 'grouped by domain · in order of current relevance');
+
+    section('CLOUD ☁');
+    field('provider',     'AWS', 'out-exec');
+    field('certified',    'SAA-C03 in progress (60%)', 'out-dim');
+    field('compute',      'EC2 · Lambda · Auto Scaling');
+    field('storage',      'S3 · EBS · EFS · Glacier');
+    field('networking',   'VPC · Route 53 · Security Groups · ELB');
+    field('identity',     'IAM · Roles · Policies · CloudWatch');
+    field('iac',          'Docker Compose · Git');
+
+    section('AUTOMATION');
+    field('languages',    'Bash · boto3 · AI-assisted dev (Python logic + Claude)');
+    
+    field('CI/CD',        'GitHub Actions · Git');
+    field('frameworks',   'FastAPI · Uvicorn');
+
+    section('CONTAINERS');
+    field('runtime',      'Docker · Docker Compose');
+    
+    field('proxy',        'Nginx Reverse Proxy');
+
+    section('OS &amp; SERVERS');
+    field('linux',        'Debian · Ubuntu · RHEL');
+    field('windows',      'Server 2012/2016 · Active Directory');
+    field('directory',    'DNS · DHCP · GPO · Samba');
+    field('hypervisor',   'VMware ESXi');
+    field('storage',      'NFS · DFS Replication · RAID');
+
+    section('NETWORKING');
+    field('firewall',     'OPNsense · pfSense');
+    field('switching',    'Cisco Catalyst · HP ProCurve');
+    field('segmentation', 'VLANs · 802.1Q trunk');
+    field('IDS',          'Suricata');
+    field('VPN',          'WireGuard · OpenVPN site-to-site');
+
+    section('OBSERVABILITY');
+    field('metrics',      'Prometheus · Grafana');
+    field('logs',         'Loki · Vector · Cacti (legacy)');
+    field('exporters',    'Node Exporter · SNMP Exporter · cAdvisor');
+
+    section('SECURITY');
+    field('network',      'VLAN isolation · firewall rules · IDS');
+    field('access',       'SSH key management · Cloudflare SSL/TLS');
+    field('secrets',      'Vaultwarden self-hosted');
+    field('compliance',   'GDPR awareness');
+
+    section('INDUSTRIAL · prior career');
+    field('PLC',          'Siemens S7-300/400 · Rockwell Allen-Bradley');
+    field('SCADA',        'Elipse E3');
+    field('panels',       'Electrical control panel design + assembly');
+
+    section('LANGUAGES');
+    field('portuguese',   'native', 'out-exec');
+    field('english',      'B2 · upper-intermediate');
+    field('japanese',     'working · daily use', 'out-warn');
+    appendBlank();
+  }
+
+  // ─── contact ─────────────────────────────────────────────────
+  function cmdContact() {
+    header('CONTACT', 'how to reach me');
+
+    appendBlank();
+    appendHTML('  <span class="out-info">✉</span>  <span class="out-file">luis@rochaluis.com</span>');
+    appendHTML('  <span class="out-info">⌬</span>  <span class="out-file">github.com/rochaOps</span>');
+    appendHTML('  <span class="out-info">⌘</span>  <span class="out-file">linkedin.com/in/rocha-luis</span>');
+    appendHTML('  <span class="out-info">⌂</span>  <span class="out-file">rochaluis.com</span>');
+    appendHTML('  <span class="out-info">⌖</span>  <span class="out-dim">komaki · aichi · japan  · 35.29°N 136.92°E</span>');
+    appendBlank();
+
+    section('availability');
+    field('current',  'employed · open to opportunities', 'out-warn');
+    field('notice',   '~30 days');
+    field('relocate', 'yes — worldwide · germany/eu preferred', 'out-exec');
+    field('remote',   'yes — preferred', 'out-exec');
+    field('timezone', 'JST (UTC+9) — flexible for EU/US overlap');
+
+    section('shortcuts');
+    appendHTML('  <span class="out-dim">$ </span><span class="cmd-link" data-cmd="github">github</span>     <span class="out-dim">→ open github profile</span>');
+    appendHTML('  <span class="out-dim">$ </span><span class="cmd-link" data-cmd="linkedin">linkedin</span>   <span class="out-dim">→ open linkedin profile</span>');
+    appendHTML('  <span class="out-dim">$ </span><span class="cmd-link" data-cmd="mail">mail</span>       <span class="out-dim">→ compose email</span>');
+    appendHTML('  <span class="out-dim">$ </span><span class="cmd-link" data-cmd="hire">hire</span>       <span class="out-dim">→ tell me you\'re interested</span>');
+    appendBlank();
+  }
+
+  // ─── hire ────────────────────────────────────────────────────
+  function cmdHire() {
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+    appendBlank();
+
+    if (isMobile) {
+      // Compact mobile version — no wide ASCII box
+      appendHTML('<span class="out-warn">  ─────────────────────────────────</span>');
+      appendBlank();
+      appendHTML('  <span class="out-accent">YOU\'RE THINKING ABOUT</span>');
+      appendHTML('  <span class="out-accent">HIRING ME.</span>');
+      appendBlank();
+      appendHTML('  <span class="out-exec">that\'s a great instinct.</span>');
+      appendBlank();
+      appendHTML('<span class="out-warn">  ─────────────────────────────────</span>');
+    } else {
+      // Desktop version with framed box — everything inside one span per line
+      const W = 57;
+      const pad = (s, total) => {
+        const len = s.length;
+        const left = Math.floor((total - len) / 2);
+        const right = total - len - left;
+        return ' '.repeat(left) + s + ' '.repeat(right);
+      };
+      appendHTML('<span class="out-warn">  ╔' + '═'.repeat(W) + '╗</span>');
+      appendHTML('<span class="out-warn">  ║' + ' '.repeat(W) + '║</span>');
+      appendHTML('<span class="out-warn">  ║</span><span class="out-accent">' + pad("YOU'RE THINKING ABOUT HIRING ME.", W) + '</span><span class="out-warn">║</span>');
+      appendHTML('<span class="out-warn">  ║' + ' '.repeat(W) + '║</span>');
+      appendHTML('<span class="out-warn">  ║</span><span class="out-exec">' + pad("that's a great instinct.", W) + '</span><span class="out-warn">║</span>');
+      appendHTML('<span class="out-warn">  ║' + ' '.repeat(W) + '║</span>');
+      appendHTML('<span class="out-warn">  ╚' + '═'.repeat(W) + '╝</span>');
+    }
+    appendBlank();
+
+    appendHTML('  <span class="out-file">Here&apos;s the deal:</span>');
+    appendBlank();
+    appendHTML('  <span class="out-dim">→</span> <span class="out-file">I\'ve been building infrastructure for 17 years.</span>');
+    appendHTML('  <span class="out-dim">→</span> <span class="out-file">The 4 years in a Japanese factory taught me discipline,</span>');
+    appendHTML('     <span class="out-file">multilingual leadership, and incident handling at scale.</span>');
+    appendHTML('  <span class="out-dim">→</span> <span class="out-file">My homelab has 847 days of uptime. That\'s the bar I hold myself to.</span>');
+    appendHTML('  <span class="out-dim">→</span> <span class="out-file">I just earned both AWS Associate certs back-to-back.</span>');
+    appendHTML('  <span class="out-dim">→</span> <span class="out-file">I want to go back to cloud / DevOps full-time. Now.</span>');
+    appendBlank();
+
+    appendHTML('  <span class="out-info">If you have a role that fits, here\'s how to start:</span>');
+    appendBlank();
+    appendHTML('    <span class="out-exec">✉</span>  <span class="out-file">luis@rochaluis.com</span>');
+    appendHTML('    <span class="out-exec">⌘</span>  <span class="out-file">linkedin.com/in/rocha-luis</span>');
+    appendHTML('    <span class="out-exec">⌬</span>  <span class="out-file">github.com/rochaOps</span>');
+    appendBlank();
+
+    appendHTML('  <span class="out-dim">A short message saying what your team does is enough.</span>');
+    appendHTML('  <span class="out-dim">I\'ll respond within 48h, JST flexibility for EU/US time zones.</span>');
+    appendBlank();
+
+    appendHTML('<span class="out-dim">  ────────────────────────────────────────</span>');
+    appendHTML('  <span class="out-faint">$ mail · $ linkedin · $ github · $ contact</span>');
+    appendBlank();
+  }
+
+  // ─── External link helpers ────────────────────────────────────────────────
+  function openLink(url, label) {
+    try {
+      window.open(url, '_blank', 'noopener');
+      appendHTML('<span class="out-dim">opening </span><span class="out-info">' + esc(label || url) + '</span><span class="out-dim"> in new tab...</span>');
+      appendHTML('<span class="out-faint">  → ' + esc(url) + '</span>');
+    } catch (e) {
+      appendHTML('<span class="out-error">failed to open: ' + esc(e.message) + '</span>');
+    }
+  }
+
+  function cmdGithub()   { openLink('https://github.com/rochaOps',     'github profile'); }
+  function cmdLinkedin() { openLink('https://linkedin.com/in/rocha-luis', 'linkedin profile'); }
+  function cmdMail()     { openLink('mailto:luis@rochaluis.com',         'email composer'); }
+  function cmdWebsite()  { openLink('https://rochaluis.com',             'website'); }
+
+  // ─── THEME SYSTEM (Task 7) ────────────────────────────────────────────────
+  const THEMES = {
+    'debian': {
+      label: 'debian-default',
+      desc: 'purple shell · white text · the original',
+      vars: {
+        '--bg':'#0c0a0d', '--bg-soft':'#14101a',
+        '--text':'#e8e6e3', '--text-dim':'#8a8590', '--text-faint':'#4a4452',
+        '--user':'#c4a7e7', '--host':'#7dd3a8', '--path':'#6ba3e8',
+        '--punct':'#6a6373', '--accent':'#c4a7e7', '--cursor':'#e8e6e3',
+        '--dir':'#6ba3e8', '--file':'#e8e6e3', '--exec':'#7dd3a8',
+        '--error':'#e07b7b', '--warning':'#e0c87b', '--info':'#c4a7e7',
+        '--string':'#a5d99a', '--number':'#e0c87b', '--key':'#6ba3e8',
+      }
+    },
+    'solarized-dark': {
+      label: 'solarized-dark',
+      desc: 'muted blues and ochres · dev favorite',
+      vars: {
+        '--bg':'#002b36', '--bg-soft':'#073642',
+        '--text':'#93a1a1', '--text-dim':'#586e75', '--text-faint':'#465458',
+        '--user':'#268bd2', '--host':'#859900', '--path':'#2aa198',
+        '--punct':'#586e75', '--accent':'#cb4b16', '--cursor':'#93a1a1',
+        '--dir':'#2aa198', '--file':'#93a1a1', '--exec':'#859900',
+        '--error':'#dc322f', '--warning':'#b58900', '--info':'#268bd2',
+        '--string':'#859900', '--number':'#b58900', '--key':'#268bd2',
+      }
+    },
+    'gruvbox': {
+      label: 'gruvbox',
+      desc: 'retro warm · earthy greens and oranges',
+      vars: {
+        '--bg':'#282828', '--bg-soft':'#3c3836',
+        '--text':'#ebdbb2', '--text-dim':'#a89984', '--text-faint':'#7c6f64',
+        '--user':'#fabd2f', '--host':'#b8bb26', '--path':'#83a598',
+        '--punct':'#928374', '--accent':'#fe8019', '--cursor':'#ebdbb2',
+        '--dir':'#83a598', '--file':'#ebdbb2', '--exec':'#b8bb26',
+        '--error':'#fb4934', '--warning':'#fabd2f', '--info':'#d3869b',
+        '--string':'#b8bb26', '--number':'#d3869b', '--key':'#83a598',
+      }
+    },
+    'dracula': {
+      label: 'dracula',
+      desc: 'vampire palette · purple cyan pink',
+      vars: {
+        '--bg':'#282a36', '--bg-soft':'#373948',
+        '--text':'#f8f8f2', '--text-dim':'#9090a0', '--text-faint':'#6272a4',
+        '--user':'#bd93f9', '--host':'#50fa7b', '--path':'#8be9fd',
+        '--punct':'#6272a4', '--accent':'#ff79c6', '--cursor':'#f8f8f2',
+        '--dir':'#8be9fd', '--file':'#f8f8f2', '--exec':'#50fa7b',
+        '--error':'#ff5555', '--warning':'#f1fa8c', '--info':'#bd93f9',
+        '--string':'#f1fa8c', '--number':'#ffb86c', '--key':'#8be9fd',
+      }
+    },
+    'tokyo-night': {
+      label: 'tokyo-night',
+      desc: 'modern cyberpunk · deep blues and purple',
+      vars: {
+        '--bg':'#1a1b26', '--bg-soft':'#24283b',
+        '--text':'#c0caf5', '--text-dim':'#7d8497', '--text-faint':'#565a72',
+        '--user':'#bb9af7', '--host':'#9ece6a', '--path':'#7aa2f7',
+        '--punct':'#565a72', '--accent':'#7dcfff', '--cursor':'#c0caf5',
+        '--dir':'#7aa2f7', '--file':'#c0caf5', '--exec':'#9ece6a',
+        '--error':'#f7768e', '--warning':'#e0af68', '--info':'#bb9af7',
+        '--string':'#9ece6a', '--number':'#ff9e64', '--key':'#7aa2f7',
+      }
+    },
+    'catppuccin': {
+      label: 'catppuccin-mocha',
+      desc: 'pastel goth · soft and warm',
+      vars: {
+        '--bg':'#1e1e2e', '--bg-soft':'#313244',
+        '--text':'#cdd6f4', '--text-dim':'#9399b2', '--text-faint':'#6c7086',
+        '--user':'#cba6f7', '--host':'#a6e3a1', '--path':'#89b4fa',
+        '--punct':'#6c7086', '--accent':'#f5c2e7', '--cursor':'#cdd6f4',
+        '--dir':'#89b4fa', '--file':'#cdd6f4', '--exec':'#a6e3a1',
+        '--error':'#f38ba8', '--warning':'#f9e2af', '--info':'#cba6f7',
+        '--string':'#a6e3a1', '--number':'#fab387', '--key':'#89b4fa',
+      }
+    },
+    'amber-crt': {
+      label: 'amber-crt',
+      desc: 'IBM 3279 · phosphor amber on black · grandpa\'s terminal',
+      vars: {
+        '--bg':'#0d0700', '--bg-soft':'#1a0f00',
+        '--text':'#ffb000', '--text-dim':'#a06800', '--text-faint':'#5c3c00',
+        '--user':'#ffcc44', '--host':'#ff9000', '--path':'#ffd966',
+        '--punct':'#7a5000', '--accent':'#ffd966', '--cursor':'#ffb000',
+        '--dir':'#ffd966', '--file':'#ffb000', '--exec':'#ffcc44',
+        '--error':'#ff5500', '--warning':'#ffcc00', '--info':'#ffcc44',
+        '--string':'#ffcc44', '--number':'#ffcc00', '--key':'#ffd966',
+      }
+    },
+    'matrix': {
+      label: 'matrix',
+      desc: 'green on black · full nostalgia · 1999 vibes',
+      vars: {
+        '--bg':'#000000', '--bg-soft':'#0a0a0a',
+        '--text':'#00ff41', '--text-dim':'#008f11', '--text-faint':'#005706',
+        '--user':'#00ff41', '--host':'#39ff14', '--path':'#00cc33',
+        '--punct':'#005706', '--accent':'#39ff14', '--cursor':'#00ff41',
+        '--dir':'#39ff14', '--file':'#00ff41', '--exec':'#00ff66',
+        '--error':'#ff0040', '--warning':'#aaff00', '--info':'#39ff14',
+        '--string':'#00ff66', '--number':'#aaff00', '--key':'#39ff14',
+      }
+    },
+    'paper': {
+      label: 'paper',
+      desc: 'light mode · for the brave · or for printing',
+      vars: {
+        '--bg':'#fafaf7', '--bg-soft':'#eeede9',
+        '--text':'#1c1c1c', '--text-dim':'#666666', '--text-faint':'#aaaaaa',
+        '--user':'#6a3ea1', '--host':'#057a55', '--path':'#1a56db',
+        '--punct':'#888888', '--accent':'#6a3ea1', '--cursor':'#1c1c1c',
+        '--dir':'#1a56db', '--file':'#1c1c1c', '--exec':'#057a55',
+        '--error':'#c81e1e', '--warning':'#9f580a', '--info':'#6a3ea1',
+        '--string':'#057a55', '--number':'#9f580a', '--key':'#1a56db',
+      }
+    },
+  };
+
+  // Number → key map for `theme N`
+  const THEME_BY_NUM = ['debian','solarized-dark','gruvbox','dracula','tokyo-night','catppuccin','amber-crt','matrix','paper'];
+  const THEME_KEY_PERSIST = 'rochaOS:theme';
+
+  function getCurrentThemeKey() {
+    try {
+      const saved = localStorage.getItem(THEME_KEY_PERSIST);
+      if (saved && THEMES[saved]) return saved;
+    } catch (e) {}
+    return 'debian';
+  }
+
+  function applyTheme(key) {
+    const t = THEMES[key];
+    if (!t) return false;
+    const root = document.documentElement;
+    for (const [k, v] of Object.entries(t.vars)) {
+      root.style.setProperty(k, v);
+    }
+    try { localStorage.setItem(THEME_KEY_PERSIST, key); } catch (e) {}
+    return true;
+  }
+
+  // ─── ANIMATED COMMANDS — TRACEROUTE CAREER ────────────────────────────────
+  function cmdTraceroute(args) {
+    const target = args && args[0];
+    if (!target || (target !== 'career' && target !== 'me' && target !== 'luis' && target !== 'luis@rocha')) {
+      appendHTML('<span class="out-error">traceroute: invalid target: ' + esc(target || '') + '</span>');
+      appendHTML('<span class="out-dim">try: traceroute career</span>');
+      return;
+    }
+
+    appendHTML('<span class="out-info">traceroute to </span><span class="out-accent">luis@rocha</span><span class="out-info"> (35 yo), 16 hops max, 60 byte packets</span>');
+    appendBlank();
+
+    const hops = [
+      { n:1,  host:'brazil_2009_intern',          ms:[12,8,11],     tags:'',                                col:'out-dim' },
+      { n:2,  host:'compact_automation_2009-2012', ms:[27,31,29],   tags:'[PLC · SCADA · SENAI diploma]',   col:'out-file' },
+      { n:3,  host:null,                          ms:null,          tags:'',                                col:'out-faint' },
+      { n:3,  host:'clinica_jamal_2013-2019',     ms:[68,72,71],    tags:'[sole IT · 30 endpoints · 6 years]',  col:'out-file' },
+      { n:4,  host:'slac_hybrid_aws_2015-2016',   ms:[124,131,128], tags:'[AWS · OpenVPN · dual AD · DFS]', col:'out-exec' },
+      { n:5,  host:'afv_brasil_aws_2014-2015',    ms:[156,148,162], tags:'[EC2 · Route53 · custom AMI]',    col:'out-exec' },
+      { n:6,  host:'unip_engineering_2018',       ms:[212,218,209], tags:'[B.Eng. Electrical Engineering]', col:'out-info' },
+      { n:7,  host:'japan_pandemic_2020',         ms:[8847,9012,8731], tags:'[!H · the world stopped]',    col:'out-warn', flag:' !H' },
+      { n:8,  host:'avance_corp_2020-2024',       ms:[4521,4488,4602], tags:'[factory floor · zero incidents · 4y]', col:'out-file' },
+      { n:9,  host:'homelab_2022',                ms:[2150,2089,2204], tags:'[OPNsense · Docker · 15+ services]', col:'out-exec' },
+      { n:10, host:'brexa_team_leader_2024',      ms:[1247,1198,1284], tags:'[multilingual ops · shifts]',  col:'out-file' },
+      { n:11, host:'aws_saa_c03_in_progress',      ms:[612,597,604], tags:'[studying · 60%]',               col:'out-dim' },
+      { n:13, host:'agente-ligacao_2026',         ms:[321,308,317], tags:'[FastAPI · AI · Japanese TTS]',  col:'out-accent' },
+      { n:14, host:'rochaOS_portfolio_2026',      ms:[42,38,41],   tags:'[you are here ●]',                col:'out-accent' },
+      { n:15, host:'next_role_eu_relocation',     ms:null,          tags:'[* * * pending...]',              col:'out-warn' },
+      { n:16, host:'next_role_remote_global',     ms:null,          tags:'[* * * also welcome]',            col:'out-warn' },
+    ];
+
+    let idx = 0;
+    function next() {
+      if (idx >= hops.length) {
+        appendBlank();
+        appendHTML('<span class="out-info">trace complete</span>  <span class="out-dim">· path covers 17 years · 2 continents · 3 languages</span>');
+        appendBlank();
+        appendHTML('<span class="out-dim">tip: $ resume   for the structured version</span>');
+        appendHTML('<span class="out-dim">     $ hire     to talk about hop 15+</span>');
+        scrollToBottom();
+        return;
+      }
+      const h = hops[idx++];
+
+      // Render the line
+      const numStr = String(h.n).padStart(2, ' ');
+      let line;
+      if (h.host === null) {
+        // Just probes/asterisks
+        line = '<span class="out-faint">' + numStr + '  *  *  *</span>';
+      } else if (h.ms === null) {
+        // Pending hop
+        line = '<span class="out-faint">' + numStr + '  </span><span class="' + h.col + '">' + esc(h.host.padEnd(34)) + '</span>  <span class="out-faint">*  *  *</span>  <span class="' + h.col + '">' + esc(h.tags) + '</span>';
+      } else {
+        const msStr = h.ms.map(m => String(m).padStart(4) + ' ms').join('  ');
+        const flag = h.flag ? '<span class="out-warn">' + h.flag + '</span>' : '';
+        line = '<span class="out-faint">' + numStr + '  </span><span class="' + h.col + '">' + esc(h.host.padEnd(34)) + '</span>  ' + msStr + flag + '  <span class="out-dim">' + esc(h.tags) + '</span>';
+      }
+
+      appendHTML(line);
+      scrollToBottom();
+
+      // Variable delay: longer for big jumps (japan, factory years), short for "fast" hops
+      let delay = 380;
+      if (h.host === null) delay = 700;            // dramatic pause on asterisks
+      else if (h.ms && h.ms[0] > 5000) delay = 1100; // long pause for "stuck" hops
+      else if (h.ms && h.ms[0] > 2000) delay = 700;
+      else if (h.ms === null) delay = 900;          // pending hops have long pause
+      setTimeout(next, delay);
+    }
+
+    setTimeout(next, 250);
+  }
+
+  // ─── ANIMATED COMMANDS — NMAP -sV LOCALHOST ───────────────────────────────
+  function cmdNmap(args) {
+    const target = args && args.find(a => !a.startsWith('-'));
+    const isOS = args && args.includes('-O');
+
+    if (!target || (target !== 'localhost' && target !== '127.0.0.1' && target !== 'luis')) {
+      appendHTML('<span class="out-error">nmap: invalid target: ' + esc(target || '') + '</span>');
+      appendHTML('<span class="out-dim">try: nmap -sV localhost</span>');
+      return;
+    }
+
+    appendHTML('<span class="out-info">Starting Nmap 7.94</span> <span class="out-dim">( https://nmap.org )</span> <span class="out-faint">at 2026-04 JST</span>');
+    appendHTML('<span class="out-dim">Nmap scan report for </span><span class="out-accent">localhost (luis@rocha)</span>');
+    appendHTML('<span class="out-dim">Host is up </span><span class="out-exec">(0.000018s latency)</span>');
+    appendBlank();
+
+    // Progress bar phase
+    const progressDiv = document.createElement('div');
+    progressDiv.className = 'line';
+    getOutputTarget().appendChild(progressDiv);
+
+    let pct = 0;
+    function progress() {
+      pct += 7 + Math.random() * 14;
+      if (pct >= 100) pct = 100;
+      const filled = Math.floor(pct / 5);
+      const bar = '█'.repeat(filled) + '░'.repeat(20 - filled);
+      progressDiv.innerHTML =
+        '<span class="out-dim">Scanning... </span>' +
+        '<span class="out-exec">[' + bar + ']</span> ' +
+        '<span class="out-info">' + pct.toFixed(0) + '%</span>';
+      scrollToBottom();
+      if (pct < 100) setTimeout(progress, 120 + Math.random() * 80);
+      else setTimeout(showResults, 350);
+    }
+
+    function showResults() {
+      // Replace progress with final scan time
+      progressDiv.innerHTML = '<span class="out-dim">Scanned in 1.43 seconds · 1024 ports analyzed</span>';
+      appendBlank();
+
+      // Header
+      appendHTML('<span class="out-info">' +
+        'PORT'.padEnd(13) +
+        'STATE'.padEnd(11) +
+        'SERVICE'.padEnd(20) +
+        'VERSION</span>');
+      appendHTML('<span class="out-faint">' + '─'.repeat(70) + '</span>');
+
+      const ports = [
+        ['22/tcp',     'open',     'ssh',           'OpenSSH 9.x (homelab access)'],
+        ['80/tcp',     'open',     'http',          'Nginx Reverse Proxy'],
+        ['443/tcp',    'open',     'https',         'Cloudflare SSL/TLS'],
+        ['53/udp',     'open',     'dns',           'AdGuard Home (homelab)'],
+        ['3000/tcp',   'open',     'grafana',       'Grafana 11.x'],
+        ['3306/tcp',   'open',     'mysql',         'AWS RDS-ready'],
+        ['5432/tcp',   'open',     'postgresql',    'AWS RDS · production-grade'],
+        ['8006/tcp',   'open',     'proxmox',       'VMware ESXi experience'],
+                ['8096/tcp',   'open',     'jellyfin',      'self-hosted media'],
+        ['9000/tcp',   'open',     'docker',        'Docker · 15+ services'],
+        ['9090/tcp',   'open',     'prometheus',    'Prometheus 2.x'],
+        ['9100/tcp',   'open',     'node-exporter', 'metrics pipeline'],
+                ['51820/udp',  'open',     'wireguard',     'WireGuard VPN · production'],
+      ];
+
+      let i = 0;
+      function emit() {
+        if (i >= ports.length) {
+          appendBlank();
+          if (isOS) {
+            appendHTML('<span class="out-info">OS detection:</span>');
+            appendHTML('  <span class="out-dim">Device: </span><span class="out-file">human · cloud infrastructure engineer</span>');
+            appendHTML('  <span class="out-dim">OS: </span><span class="out-file">Linux 6.1 (Debian-based · daily driver)</span>');
+            appendHTML('  <span class="out-dim">Locale: </span><span class="out-file">pt_BR + en_US + ja_JP (multilingual)</span>');
+            appendHTML('  <span class="out-dim">Geolocation: </span><span class="out-file">Komaki, Aichi, Japan · 35.29°N 136.92°E</span>');
+            appendBlank();
+          }
+          appendHTML('<span class="out-dim">Note: </span><span class="out-file">All listed services are operating in the homelab. Some are AWS-mirrored.</span>');
+          appendHTML('<span class="out-dim">Aggressive scan: </span><span class="out-warn">recruiter activity detected · low risk · welcome</span>');
+          appendBlank();
+          appendHTML('<span class="out-info">Nmap done:</span> <span class="out-dim">1 IP scanned · 15 services up · open to connections</span>');
+          appendBlank();
+          appendHTML('<span class="out-dim">tip: $ skills    structured view of the same info</span>');
+          appendHTML('<span class="out-dim">     $ contact   how to connect</span>');
+          scrollToBottom();
+          return;
+        }
+        const [port, state, service, version] = ports[i++];
+        const stateClass = state === 'open' ? 'out-exec' : (state === 'filtered' ? 'out-warn' : 'out-dim');
+        appendHTML(
+          '<span class="out-accent">' + esc(port.padEnd(13)) + '</span>' +
+          '<span class="' + stateClass + '">' + esc(state.padEnd(11)) + '</span>' +
+          '<span class="out-info">' + esc(service.padEnd(20)) + '</span>' +
+          '<span class="out-file">' + esc(version) + '</span>'
+        );
+        scrollToBottom();
+        setTimeout(emit, 110 + Math.random() * 80);
+      }
+      emit();
+    }
+
+    setTimeout(progress, 200);
+  }
+  // ─── ANIMATED COMMANDS — RENDER NETWORK ───────────────────────────────────
+  // Draws homelab topology line-by-line with timing.
+  function cmdRender(args) {
+    const target = args && args[0];
+    if (!target || (target !== 'network' && target !== 'topology' && target !== 'homelab')) {
+      appendHTML('<span class="out-error">render: invalid target: ' + esc(target || '') + '</span>');
+      appendHTML('<span class="out-dim">try: render network</span>');
+      return;
+    }
+
+    appendHTML('<span class="out-dim">// rendering homelab topology...</span>');
+    appendBlank();
+
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+
+    // Use semantic markers in the lines so we can colorize on the fly.
+    // Each line: [text, optional class]
+    const lines = isMobile ? [
+      ['network topology · vertical view',                'out-accent'],
+      ['═════════════════════════════════════',            'out-faint'],
+      ['',                                                  null],
+      ['  ◉ internet · softbank PPPoE',                    'out-error'],
+      ['  │',                                               'out-faint'],
+      ['  ▼',                                               'out-faint'],
+      ['  ◉ opnsense 26.1',                                 'out-warn'],
+      ['    optiplex 7060 · I350-T4',                       'out-dim'],
+      ['    suricata IDS · all interfaces',                 'out-dim'],
+      ['  │',                                               'out-faint'],
+      ['  ├─→ ◉ cisco 2960  (L2 LAN switch)',              'out-exec'],
+      ['  │   ├─◉ clients   (workstations · printer)',     'out-file'],
+      ['  │   └─◉ DS220+    (synology NAS · NFS)',         'out-info'],
+      ['  │',                                               'out-faint'],
+      ['  ├─→ ◉ unifi U6-lite  (802.1Q trunk)',            'out-exec'],
+      ['  │   ├─◉ VLAN 20  trusted wifi',                  'out-file'],
+      ['  │   ├─◉ VLAN 30  guest · isolated',              'out-dim'],
+      ['  │   ├─◉ VLAN 40  IoT · isolated',                'out-dim'],
+      ['  │   └─◉ VLAN 50  TV/media · isolated',           'out-dim'],
+      ['  │',                                               'out-faint'],
+      ['  └─→ ◉ homeserver  (debian 12 · docker)',         'out-exec'],
+      ['      │',                                           'out-faint'],
+      ['      ├── observability ──────',                    'out-info'],
+      ['      │   prometheus · grafana',                    'out-dim'],
+      ['      │   loki · vector · cadvisor',                'out-dim'],
+      ['      │',                                           'out-faint'],
+      ['      └── services ──────────',                     'out-info'],
+      ['          nginx · vaultwarden',                     'out-dim'],
+      ['          jellyfin · matrix · adguard',             'out-dim'],
+      ['          sonarr/radarr · agente-ligação',          'out-dim'],
+      ['',                                                  null],
+      ['═════════════════════════════════════',            'out-faint'],
+    ] : [
+      ['                          ┌──────────────────┐',           'out-error'],
+      ['                          │   internet       │',           'out-error'],
+      ['                          │   softbank pppoe │',           'out-error'],
+      ['                          └────────┬─────────┘',           'out-error'],
+      ['                                   │',                     'out-faint'],
+      ['                          ┌────────▼─────────┐',           'out-warn'],
+      ['                          │  opnsense 26.1   │',           'out-warn'],
+      ['                          │  optiplex 7060   │',           'out-warn'],
+      ['                          │  intel i350-t4   │',           'out-warn'],
+      ['                          │  suricata IDS    │',           'out-warn'],
+      ['                          └──┬─────┬─────┬───┘',           'out-warn'],
+      ['                             │     │     │',               'out-faint'],
+      ['                ┌────────────┘     │     └────────────┐',  'out-faint'],
+      ['                │                  │                  │',  'out-faint'],
+      ['       ┌────────▼────────┐  ┌──────▼──────┐  ┌────────▼────────┐', 'out-exec'],
+      ['       │ cisco 2960      │  │ unifi u6    │  │ homeserver      │', 'out-exec'],
+      ['       │ L2 LAN switch   │  │ 802.1Q wifi │  │ debian 12       │', 'out-exec'],
+      ['       └─┬───────────┬───┘  └──┬──┬──┬──┬─┘  │ docker host     │', 'out-exec'],
+      ['         │           │         │  │  │  │    └──────┬──────────┘', 'out-exec'],
+      ['         │           │       v20 v30 v40 v50        │',           'out-info'],
+      ['    ┌────▼────┐  ┌───▼────┐                ┌────────┴────────┐',  'out-faint'],
+      ['    │ clients │  │ DS220+ │              services       observability', 'out-file'],
+      ['    │ (lan)   │  │ NAS    │              ─────────       ─────────────', 'out-file'],
+      ['    └─────────┘  └────────┘              nginx           prometheus',   'out-dim'],
+      ['                                         vaultwarden     grafana',     'out-dim'],
+      ['                                         jellyfin        loki',        'out-dim'],
+      ['                                         matrix          vector',      'out-dim'],
+      ['                                         adguard         alertmanager','out-dim'],
+      ['                                         sonarr/radarr   cadvisor',    'out-dim'],
+      ['                                         agente-ligação  node-exporter','out-dim'],
+    ];
+
+    let i = 0;
+    function emit() {
+      if (i >= lines.length) {
+        appendBlank();
+        appendHTML('<span class="out-info">topology rendered</span>  <span class="out-dim">· 16 nodes · 5 zones · 1 site</span>');
+        appendHTML('<span class="out-dim">tip: cat homelab/opnsense.conf  for firewall config</span>');
+        appendHTML('<span class="out-dim">     ssh homeserver           connect to docker host</span>');
+        scrollToBottom();
+        return;
+      }
+      const [text, cls] = lines[i++];
+      if (text === '') {
+        appendBlank();
+      } else {
+        appendHTML('<span class="' + (cls || 'out-file') + '">' + esc(text) + '</span>');
+      }
+      scrollToBottom();
+      // Faster pacing on mobile (more lines), slower on desktop
+      const delay = isMobile ? 55 : 65;
+      setTimeout(emit, delay);
+    }
+    setTimeout(emit, 200);
+  }
+
+  // ─── SSH HOMESERVER ──────────────────────────────────────────
+  function cmdSsh(args) {
+    const target = args && args[0];
+    if (!target || (target !== 'homeserver' && target !== 'home' && target !== 'rocha@homeserver' && target !== 'luis@homeserver')) {
+      appendHTML('<span class="out-error">ssh: invalid host: ' + esc(target || '') + '</span>');
+      appendHTML('<span class="out-dim">try: ssh homeserver</span>');
+      return;
+    }
+    if (state.host === 'homeserver') {
+      appendHTML('<span class="out-warn">already connected to homeserver</span>');
+      appendHTML('<span class="out-dim">type \'exit\' to return to rochaOS</span>');
+      return;
+    }
+
+    // Animated SSH connection sequence
+    const steps = [
+      [200, '<span class="out-dim">$ ssh -i ~/.ssh/homelab_ed25519 luis@homeserver.lan</span>'],
+      [350, '<span class="out-dim">resolving homeserver.lan...</span> <span class="out-exec">10.10.6.2</span>'],
+      [200, '<span class="out-dim">connecting to 10.10.6.2:22...</span> <span class="out-exec">connected</span>'],
+      [400, '<span class="out-dim">ssh: handshake (curve25519-sha256)...</span> <span class="out-exec">ok</span>'],
+      [200, '<span class="out-dim">ssh: server host key fingerprint:</span>'],
+      [120, '<span class="out-faint">  SHA256:8nqA3kP2vR7xL5mN9wQ4tY1eU6sH8jD0fX2zV4cB6gK</span>'],
+      [300, '<span class="out-dim">authenticating with public key...</span> <span class="out-exec">success</span>'],
+      [200, ''],
+      [100, '<span class="out-info">Welcome to Debian 12 · linux 6.1.0-rocha-amd64</span>'],
+      [60,  '<span class="out-dim">  uptime:    </span><span class="out-exec">847 days, 3:21</span>'],
+      [60,  '<span class="out-dim">  load avg:  </span><span class="out-file">0.18, 0.21, 0.19</span>'],
+      [60,  '<span class="out-dim">  memory:    </span><span class="out-file">22.4G / 32G used</span>'],
+      [60,  '<span class="out-dim">  docker:    </span><span class="out-exec">15 containers running</span>'],
+      [60,  '<span class="out-dim">  hostname:  </span><span class="out-info">homeserver.rocha.lan</span>'],
+      [200, ''],
+      [100, '<span class="out-dim">last login from 10.10.1.2 (luis-pc) at ' + (new Date()).toISOString().split('T')[0] + '</span>'],
+    ];
+
+    let i = 0;
+    function step() {
+      if (i >= steps.length) {
+        // Switch host context (homeserver has its own per-session history)
+        state.host = 'homeserver';
+        state.histIndex = -1;
+        state.histDraft = '';
+        updatePromptHost();
+        appendBlank();
+        appendHTML('<span class="out-dim">type \'docker ps\' to see services · \'exit\' to return to rochaOS</span>');
+        appendBlank();
+        scrollToBottom();
+        return;
+      }
+      const [delay, html] = steps[i++];
+      if (html === '') appendBlank();
+      else appendHTML(html);
+      scrollToBottom();
+      setTimeout(step, delay);
+    }
+    setTimeout(step, 100);
+  }
+
+  function cmdExit() {
+    if (state.host === 'homeserver') {
+      appendHTML('<span class="out-dim">connection to homeserver closed.</span>');
+      state.host = 'rochaOS';
+      // Reset per-session homeserver history (volatile, like real SSH bash session)
+      state.histories.homeserver = [];
+      state.histIndex = -1;
+      state.histDraft = '';
+      updatePromptHost();
+      return;
+    }
+    // At root level: just print a friendly note
+    appendHTML('<span class="out-dim">there\'s no escape · this is a static site</span>');
+    appendHTML('<span class="out-faint">  (try \'menu\' to return to system menu, or close the tab)</span>');
+  }
+
+  // ─── DOCKER PS / STATS / HTOP / UPTIME ────────────────────────────────────
+  function requireSshHomeserver(cmd) {
+    if (state.host !== 'homeserver') {
+      appendHTML('<span class="out-error">' + esc(cmd) + ': command not available on rochaOS shell</span>');
+      appendHTML('<span class="out-dim">connect first: ssh homeserver</span>');
+      return false;
+    }
+    return true;
+  }
+
+  const HOMESERVER_CONTAINERS = [
+    { name:'nginx',           image:'nginx:alpine',                   ports:'80,443/tcp',     status:'Up 213 days' },
+    { name:'prometheus',      image:'prom/prometheus:latest',         ports:'9090/tcp',       status:'Up 847 days' },
+    { name:'grafana',         image:'grafana/grafana:latest',         ports:'3000/tcp',       status:'Up 847 days' },
+    { name:'loki',            image:'grafana/loki:latest',            ports:'3100/tcp',       status:'Up 847 days' },
+    { name:'vector',          image:'timberio/vector:latest',         ports:'-',              status:'Up 12 days'  },
+    { name:'cadvisor',        image:'gcr.io/cadvisor/cadvisor:latest',ports:'8080/tcp',       status:'Up 847 days' },
+    { name:'vaultwarden',     image:'vaultwarden/server:latest',      ports:'80/tcp',         status:'Up 213 days' },
+    { name:'jellyfin',        image:'jellyfin/jellyfin:latest',       ports:'8096,8920/tcp',  status:'Up 47 days'  },
+    { name:'matrix-synapse',  image:'matrixdotorg/synapse:latest',    ports:'8008/tcp',       status:'Up 213 days' },
+    { name:'adguardhome',     image:'adguard/adguardhome:latest',     ports:'53,3000/tcp',    status:'Up 213 days' },
+    { name:'wordpress',       image:'wordpress:latest',               ports:'9000/tcp',       status:'Up 213 days' },
+    { name:'agente-ligacao',  image:'rochaOps/agente-ligacao:beta',  ports:'8100/tcp',       status:'Up 8 hours'  },
+    { name:'voicevox',        image:'voicevox/voicevox_engine:cpu',   ports:'50021/tcp',      status:'Up 8 hours'  },
+    { name:'sonarr',          image:'lscr.io/linuxserver/sonarr',     ports:'8989/tcp',       status:'Up 213 days' },
+    { name:'radarr',          image:'lscr.io/linuxserver/radarr',     ports:'7878/tcp',       status:'Up 213 days' },
+  ];
+
+  // Stable random container IDs (per session)
+  const HOMESERVER_CIDS = ['a3f91c2b8d4e','7b8c441e6b2a','2d5f8a39e7c1','e1c9b70a4d83','b6f24a18c592','d97e3b50a6c8','f4a82e6917db','c5d61bf3a8e0','8e94c2d75b13','6b7f1ad928e4','a82c6e30ff15','9c1d4e85b7a2','1f3a6c52e91d','4e7b9d28a6c1','5c8f2a14b3e7'];
+
+  function cmdDocker(args) {
+    if (!requireSshHomeserver('docker')) return;
+    const sub = args && args[0];
+
+    if (!sub || sub === 'help') {
+      appendHTML('<span class="out-info">Usage:</span>  docker COMMAND');
+      appendHTML('  <span class="out-exec">ps</span>       <span class="out-dim">list running containers</span>');
+      appendHTML('  <span class="out-exec">ps -a</span>    <span class="out-dim">list all containers</span>');
+      appendHTML('  <span class="out-exec">stats</span>    <span class="out-dim">live resource usage</span>');
+      return;
+    }
+
+    if (sub === 'ps') {
+      // header
+      const fmt = (cid, image, status, ports, name) =>
+        '<span class="out-warn">' + cid.padEnd(13) + '</span>' +
+        '<span class="out-info">' + image.padEnd(38) + '</span>' +
+        '<span class="out-exec">' + status.padEnd(15) + '</span>' +
+        '<span class="out-dim">'  + ports.padEnd(20) + '</span>' +
+        '<span class="out-file">' + name + '</span>';
+      appendHTML(
+        '<span class="out-info">' +
+        'CONTAINER ID'.padEnd(13) +
+        'IMAGE'.padEnd(38) +
+        'STATUS'.padEnd(15) +
+        'PORTS'.padEnd(20) +
+        'NAMES</span>'
+      );
+      HOMESERVER_CONTAINERS.forEach((c, i) => {
+        appendHTML(fmt(HOMESERVER_CIDS[i], c.image, c.status, c.ports, c.name));
+      });
+      appendBlank();
+      appendHTML('<span class="out-dim">' + HOMESERVER_CONTAINERS.length + ' containers · all healthy · 0 restarts last 24h</span>');
+      return;
+    }
+
+    if (sub === 'stats') {
+      appendHTML('<span class="out-info">' +
+        'CONTAINER'.padEnd(20) +
+        'CPU %'.padStart(8) + '   ' +
+        'MEM USAGE'.padEnd(18) +
+        'NET I/O'.padEnd(18) +
+        'BLOCK I/O</span>'
+      );
+
+      // Render placeholder rows we'll update live
+      const rowDivs = HOMESERVER_CONTAINERS.map(() => {
+        const div = document.createElement('div');
+        div.className = 'line';
+        getOutputTarget().appendChild(div);
+        return div;
+      });
+
+      let tick = 0;
+      const maxTicks = 6; // ~12 seconds
+      const seedF = (i, t, base, range) =>
+        Math.max(0.05, base + Math.sin(t*1.3 + i*2.7) * range * 0.4 + (Math.random() - 0.5) * range * 0.3);
+
+      function update() {
+        HOMESERVER_CONTAINERS.forEach((c, i) => {
+          // CPU baseline by service type
+          const cpuBase = c.name === 'vector' ? 3.2 :
+                          c.name === 'prometheus' ? 1.8 :
+                          c.name === 'cadvisor' ? 2.4 :
+                          c.name === 'jellyfin' ? 0.9 :
+                          c.name === 'agente-ligacao' ? 0.4 :
+                          0.3;
+          const cpu = seedF(i, tick, cpuBase, cpuBase * 0.6);
+          const memMB = Math.floor(seedF(i, tick, c.name === 'prometheus' ? 412 : c.name === 'jellyfin' ? 248 : c.name === 'matrix-synapse' ? 156 : c.name === 'wordpress' ? 112 : 64, 30));
+          const memPct = memMB / 32768 * 100;
+          const netIn = (Math.random() * 4 + 0.5).toFixed(1);
+          const netOut = (Math.random() * 8 + 0.5).toFixed(1);
+          const blkIn = (Math.random() * 50 + 10).toFixed(0);
+          const blkOut = (Math.random() * 30 + 5).toFixed(0);
+
+          const cpuClass = cpu > 3 ? 'out-error' : cpu > 1.5 ? 'out-warn' : 'out-exec';
+          rowDivs[i].innerHTML =
+            '<span class="out-file">' + c.name.padEnd(20) + '</span>' +
+            '<span class="' + cpuClass + '">' + (cpu.toFixed(2) + '%').padStart(8) + '</span>   ' +
+            '<span class="out-info">' + (memMB + ' MiB / 32 GiB ' + memPct.toFixed(1) + '%').padEnd(18) + '</span>' +
+            '<span class="out-dim">' + (netIn + 'kB/' + netOut + 'kB').padEnd(18) + '</span>' +
+            '<span class="out-dim">' + blkIn + 'kB/' + blkOut + 'kB</span>';
+        });
+        softScroll();
+        tick++;
+        if (tick < maxTicks) setTimeout(update, 2000);
+        else {
+          appendBlank();
+          appendHTML('<span class="out-dim">stats stream ended after ' + (maxTicks * 2) + 's · in real shell, runs forever</span>');
+          appendHTML('<span class="out-dim">try: htop · uptime · docker ps</span>');
+          softScroll();
+        }
+      }
+
+      update();
+      return;
+    }
+
+    appendHTML('<span class="out-error">docker: unknown command: ' + esc(sub) + '</span>');
+    appendHTML('<span class="out-dim">try: docker ps · docker stats · docker help</span>');
+  }
+
+  function cmdUptime() {
+    if (state.host === 'homeserver') {
+      const now = new Date();
+      const hh = String(now.getUTCHours()).padStart(2,'0');
+      const mm = String(now.getUTCMinutes()).padStart(2,'0');
+      appendHTML(' <span class="out-info">' + hh + ':' + mm + ':' + String(now.getUTCSeconds()).padStart(2,'0') + ' UTC</span> up <span class="out-exec">847 days, 3:21</span>, 1 user, load average: <span class="out-file">0.18, 0.21, 0.19</span>');
+      return;
+    }
+    // On rochaOS: report session uptime
+    const ms = Date.now() - sessionStart;
+    appendHTML('<span class="out-dim">session uptime: </span><span class="out-exec">' + formatUptime(ms) + '</span>');
+    appendHTML('<span class="out-dim">homelab uptime (real): </span><span class="out-exec">847 days · 0 incidents</span>');
+  }
+
+  function cmdHtop() {
+    if (!requireSshHomeserver('htop')) return;
+    appendHTML('<span class="out-warn">[htop simulated · simplified output]</span>');
+    appendBlank();
+    appendHTML('  <span class="out-info">CPU0 </span><span class="out-exec">[████████░░░░░░░░]</span> 22.4%');
+    appendHTML('  <span class="out-info">CPU1 </span><span class="out-exec">[██████░░░░░░░░░░]</span> 14.1%');
+    appendHTML('  <span class="out-info">CPU2 </span><span class="out-warn">[████████████░░░░]</span> 31.7%');
+    appendHTML('  <span class="out-info">CPU3 </span><span class="out-exec">[█████░░░░░░░░░░░]</span>  9.8%');
+    appendHTML('  <span class="out-info">Mem  </span><span class="out-info">[██████████████░░]</span> 22.4G/32G');
+    appendHTML('  <span class="out-info">Swp  </span><span class="out-faint">[░░░░░░░░░░░░░░░░]</span>     0/8G');
+    appendBlank();
+    appendHTML('  Tasks: <span class="out-file">187 total, 15 docker, 3 user</span>  Uptime: <span class="out-exec">847d 03:21</span>');
+    appendBlank();
+    appendHTML('<span class="out-dim">tip: docker stats  for per-container live metrics</span>');
+  }
+
+  // ─── EASTER EGGS (Task 10) ────────────────────────────────────────────────
+
+  // vim / nano / emacs — fake editor with :q! escape
+  // Editor overlay state
+  let editorActive = false;
+  let editorBuffer = '';
+  let editorMode = '';
+
+  function openEditorOverlay(name, filename) {
+    const overlay = document.getElementById('editor-overlay');
+    const content = document.getElementById('editor-content');
+    const statusbar = document.getElementById('editor-statusbar');
+    const edInput = document.getElementById('editor-input');
+
+    editorActive = true;
+    editorMode = name;
+    editorBuffer = '';
+
+    // Hide terminal so the editor is truly fullscreen
+    terminal.style.display = 'none';
+    overlay.style.display = 'flex';
+
+    // Build content based on editor
+    content.innerHTML = '';
+    const rows = window.innerHeight < 600 ? 18 : 28;
+
+    if (name === 'vim') {
+      // Vim splash: empty buffer with tildes on each line
+      const lines = [];
+      // Header lines (vim splash style, kinda)
+      lines.push('<span class="ed-text"></span>');
+      for (let i = 1; i < rows; i++) {
+        if (i === Math.floor(rows / 2) - 4) {
+          lines.push('<span class="ed-tilde">~</span>     <span class="ed-info">VIM - Vi IMproved</span>');
+        } else if (i === Math.floor(rows / 2) - 2) {
+          lines.push('<span class="ed-tilde">~</span>     <span class="ed-dim">version 9.1</span>');
+        } else if (i === Math.floor(rows / 2)) {
+          lines.push('<span class="ed-tilde">~</span>     <span class="ed-dim">type  </span><span class="ed-exec">:q</span><span class="ed-dim">              to exit</span>');
+        } else if (i === Math.floor(rows / 2) + 1) {
+          lines.push('<span class="ed-tilde">~</span>     <span class="ed-dim">type  </span><span class="ed-exec">:help&lt;Enter&gt;</span><span class="ed-dim">    if you\'re lost</span>');
+        } else if (i === Math.floor(rows / 2) + 3) {
+          lines.push('<span class="ed-tilde">~</span>     <span class="ed-warn">narrator: he didn\'t know how to exit vim.</span>');
+        } else {
+          lines.push('<span class="ed-tilde">~</span>');
+        }
+      }
+      content.innerHTML = lines.join('\n');
+
+      statusbar.innerHTML =
+        '<span class="ed-mode">-- NORMAL --</span>' +
+        '<span class="ed-file">' + esc(filename) + '</span>' +
+        '<span class="ed-hint">type <span class="ed-cmd">:q!</span> to exit</span>';
+      edInput.placeholder = ':q! to exit';
+    } else if (name === 'nano') {
+      const lines = [];
+      lines.push('<span class="ed-info">  GNU nano 7.2          ' + esc(filename) + '</span>');
+      lines.push('');
+      for (let i = 0; i < rows - 4; i++) {
+        if (i === 4) lines.push('  <span class="ed-text">just kidding · this is read-only</span>');
+        else if (i === 6) lines.push('  <span class="ed-dim">to exit, press </span><span class="ed-exec">Ctrl+X</span><span class="ed-dim"> or type </span><span class="ed-exec">exit</span>');
+        else lines.push('');
+      }
+      content.innerHTML = lines.join('\n');
+
+      statusbar.innerHTML =
+        '<span class="ed-mode">[ Read ' + (Math.floor(Math.random() * 80) + 12) + ' lines ]</span>' +
+        '<span class="ed-hint"><span class="ed-cmd">^X</span> Exit  <span class="ed-cmd">^O</span> WriteOut  <span class="ed-cmd">^W</span> Where Is</span>';
+      edInput.placeholder = 'press Ctrl+X or type "exit"';
+    } else {
+      // emacs
+      const lines = [];
+      lines.push('<span class="ed-warn">emacs is loading dependencies...</span>');
+      lines.push('');
+      lines.push('  <span class="ed-dim">[████░░░░░░░░░░░░░░░░] 18%  resolving emacs-overlay-deps-emacs-30.1...</span>');
+      lines.push('  <span class="ed-dim">[█████████░░░░░░░░░░░] 42%  fetching org-roam-2.2.2...</span>');
+      lines.push('  <span class="ed-dim">[██████████████░░░░░░] 71%  byte-compiling 4,832 elisp files...</span>');
+      for (let i = 0; i < rows - 8; i++) lines.push('');
+      lines.push('  <span class="ed-text">go grab a coffee, this might take a while.</span>');
+      content.innerHTML = lines.join('\n');
+
+      statusbar.innerHTML =
+        '<span class="ed-mode">-UUU:----F1</span>' +
+        '<span class="ed-file">  *scratch*</span>' +
+        '<span class="ed-hint">press <span class="ed-cmd">Ctrl+X</span> or <span class="ed-cmd">Ctrl+C</span> to exit (or type <span class="ed-cmd">exit</span>)</span>';
+      edInput.placeholder = 'Ctrl+X or exit';
+    }
+
+    edInput.value = '';
+    setTimeout(() => edInput.focus(), 50);
+  }
+
+  function closeEditorOverlay(message) {
+    const overlay = document.getElementById('editor-overlay');
+    overlay.style.display = 'none';
+    terminal.style.display = 'block';
+    editorActive = false;
+    editorMode = '';
+    if (message) appendHTML(message);
+    focusInput();
+    scrollToBottom();
+  }
+
+  function cmdEditor(name, args) {
+    const filename = args && args[0] ? args[0] : 'untitled.txt';
+    openEditorOverlay(name, filename);
+  }
+
+  // Setup editor overlay input handlers (runs once on init)
+  function setupEditorOverlay() {
+    const edInput = document.getElementById('editor-input');
+    if (!edInput) return;
+
+    edInput.addEventListener('keydown', (e) => {
+      if (!editorActive) return;
+
+      // Ctrl+X for nano = exit
+      if (editorMode === 'nano' && e.ctrlKey && (e.key === 'x' || e.key === 'X')) {
+        e.preventDefault();
+        closeEditorOverlay('<span class="out-dim">[ saved... not really. it\'s read-only. ]</span>');
+        return;
+      }
+
+      // Emacs: Ctrl+X (alone) closes; Ctrl+C also closes (interrupt)
+      if (editorMode === 'emacs' && e.ctrlKey && (e.key === 'x' || e.key === 'X' || e.key === 'c' || e.key === 'C')) {
+        e.preventDefault();
+        closeEditorOverlay('<span class="out-dim">emacs closed. you escaped.</span>');
+        return;
+      }
+
+      // Esc + clear input
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        edInput.value = '';
+        return;
+      }
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = edInput.value.trim();
+        edInput.value = '';
+
+        if (editorMode === 'vim') {
+          if (val === ':q' || val === ':q!' || val === ':wq' || val === ':qa' || val === ':qa!' || val === ':x') {
+            closeEditorOverlay('<span class="out-exec">you escaped vim. you\'re among the elite.</span>');
+            return;
+          }
+          if (val === ':help' || val === ':h') {
+            // brief help
+            const content = document.getElementById('editor-content');
+            content.innerHTML +=
+              '\n<span class="ed-info">commands you can use here:</span>' +
+              '\n  <span class="ed-exec">:q</span>     <span class="ed-dim">quit</span>' +
+              '\n  <span class="ed-exec">:q!</span>    <span class="ed-dim">quit no matter what</span>' +
+              '\n  <span class="ed-exec">:wq</span>    <span class="ed-dim">save and quit (file is read-only here)</span>';
+            return;
+          }
+          // Anything else: stay
+          return;
+        }
+
+        if (editorMode === 'nano' || editorMode === 'emacs') {
+          if (val === 'exit' || val === 'quit') {
+            closeEditorOverlay('<span class="out-dim">' + esc(editorMode) + ' closed.</span>');
+            return;
+          }
+          return;
+        }
+      }
+    });
+  }
+
+  // Run setup on DOMContentLoaded (script already runs after DOM)
+  setupEditorOverlay();
+
+  function cmdQuitVim(args) {
+    // Direct ':q!' from shell (without entering vim) — user is showing off
+    if (editorActive) {
+      closeEditorOverlay('<span class="out-exec">you escaped. respect.</span>');
+      return;
+    }
+    appendHTML('<span class="out-warn">you\'re not in vim. but i appreciate the muscle memory.</span>');
+  }
+
+
+  // cowsay
+  function cmdCowsay(args) {
+    const msg = (args && args.join(' ')) || 'moo';
+    const top = ' ' + '_'.repeat(msg.length + 2);
+    const bot = ' ' + '-'.repeat(msg.length + 2);
+    appendBlank();
+    appendHTML('<span class="out-file">' + esc(top) + '</span>');
+    appendHTML('<span class="out-file">&lt; ' + esc(msg) + ' &gt;</span>');
+    appendHTML('<span class="out-file">' + esc(bot) + '</span>');
+    appendHTML('<span class="out-file">        \\   ^__^</span>');
+    appendHTML('<span class="out-file">         \\  (oo)\\_______</span>');
+    appendHTML('<span class="out-file">            (__)\\       )\\/\\</span>');
+    appendHTML('<span class="out-file">                ||----w |</span>');
+    appendHTML('<span class="out-file">                ||     ||</span>');
+    appendBlank();
+  }
+
+  // matrix — vertical-ish digital rain for ~5 seconds
+  function cmdMatrix() {
+    appendHTML('<span class="out-exec">wake up, neo...</span>');
+    appendBlank();
+
+    const chars = 'ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍｦｲｸｺｿﾁﾄﾉﾌﾔﾖﾙﾚﾛﾝ0123456789Z:.=*+-<>¦｜╌';
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+    const cols = isMobile ? 36 : 60;
+    const rows = 18;
+    const ticks = 50;
+
+    function randChar() {
+      return chars[Math.floor(Math.random() * chars.length)];
+    }
+
+    let tick = 0;
+    function step() {
+      if (tick >= ticks) {
+        appendBlank();
+        appendHTML('<span class="out-exec">there is no spoon.</span>');
+        appendHTML('<span class="out-dim">(tip: try \'fortune\' or \'cowsay hello\' for more nonsense)</span>');
+        scrollToBottom();
+        return;
+      }
+
+      // Build one row of matrix
+      let row = '';
+      for (let j = 0; j < cols; j++) {
+        const r = Math.random();
+        if (r < 0.35) {
+          row += randChar();
+        } else if (r < 0.5) {
+          row += ' ';
+        } else {
+          row += randChar();
+        }
+      }
+      // Use mixed brightness: random chars in green, some bright, some faint
+      const brightness = Math.random();
+      const cls = brightness > 0.85 ? 'out-exec' : brightness > 0.4 ? 'out-file' : 'out-faint';
+      appendHTML('<span class="' + cls + '" style="color:#00ff41">' + esc(row) + '</span>');
+      tick++;
+      softScroll();
+      setTimeout(step, 80);
+    }
+    step();
+  }
+
+  // sudo rm -rf — dramatic but ultimately harmless
+  function cmdSudo(args) {
+    if (!args || args.length === 0) {
+      appendHTML('<span class="out-error">sudo: a command must be specified</span>');
+      return;
+    }
+    const cmd = args.join(' ');
+    if (/^rm\s+-rf\s+\/\s*$/.test(cmd) || /^rm\s+-rf\s+~\s*$/.test(cmd) || /^rm\s+-rf\s+\.\s*$/.test(cmd)) {
+      appendBlank();
+      appendHTML('<span class="out-warn">[sudo] password for luis: </span><span class="out-faint">●●●●●●●●</span>');
+      const steps = [
+        [400, '<span class="out-error">rm: removing /bin...</span>'],
+        [200, '<span class="out-error">rm: removing /boot...</span>'],
+        [200, '<span class="out-error">rm: removing /etc...</span>'],
+        [200, '<span class="out-error">rm: removing /home...</span>'],
+        [300, '<span class="out-error">rm: removing /var...</span>'],
+        [200, '<span class="out-error">rm: removing /usr...</span>'],
+        [400, '<span class="out-error">rm: removing /...</span>'],
+        [600, '<span class="out-warn">                          (chk... chk... ZZZ)</span>'],
+        [800, ''],
+        [200, '<span class="out-exec">just kidding.</span>'],
+        [200, '<span class="out-dim">this is a static HTML file.</span>'],
+        [200, '<span class="out-dim">your filesystem is fine. mine too.</span>'],
+        [400, '<span class="out-faint">but you do have great instincts. respect.</span>'],
+      ];
+      let i = 0;
+      function step() {
+        if (i >= steps.length) { scrollToBottom(); return; }
+        const [delay, html] = steps[i++];
+        if (html === '') appendBlank();
+        else appendHTML(html);
+        scrollToBottom();
+        setTimeout(step, delay);
+      }
+      step();
+      return;
+    }
+    if (cmd.startsWith('hire ') || cmd === 'hire luis') {
+      appendHTML('<span class="out-exec">sudo not required. just go to:</span>');
+      appendHTML('  <span class="out-info">$ hire</span>');
+      return;
+    }
+    // Generic sudo: just run the command
+    appendHTML('<span class="out-warn">[sudo] password for luis: </span><span class="out-faint">●●●●●●●●</span>');
+    appendHTML('<span class="out-dim">(running as root...)</span>');
+    appendBlank();
+    dispatch(cmd);
+  }
+
+  // hello world
+  function cmdHello(args) {
+    const langs = [
+      ['python',  'print("Hello, world!")'],
+      ['javascript', 'console.log("Hello, world!");'],
+      ['rust',    'fn main() { println!("Hello, world!"); }'],
+      ['go',      'package main\nimport "fmt"\nfunc main() { fmt.Println("Hello, world!") }'],
+      ['bash',    'echo "Hello, world!"'],
+      ['c',       '#include <stdio.h>\nint main() { printf("Hello, world!\\n"); return 0; }'],
+      ['java',    'class Hello { public static void main(String[] a) { System.out.println("Hello, world!"); } }'],
+      ['ruby',    'puts "Hello, world!"'],
+      ['php',     '<?php echo "Hello, world!"; ?>'],
+      ['portuguese', '"Olá, mundo!"'],
+      ['japanese',   '「世界、こんにちは！」'],
+      ['typescript', 'console.log("Hello, world!" satisfies string);'],
+    ];
+    appendHTML('<span class="out-info">// hello world · in every language I have to remember</span>');
+    appendBlank();
+    let i = 0;
+    function emit() {
+      if (i >= langs.length) {
+        appendBlank();
+        appendHTML('<span class="out-dim">all of them say the same thing. that\'s the whole game.</span>');
+        scrollToBottom();
+        return;
+      }
+      const [lang, code] = langs[i++];
+      appendHTML('<span class="out-warn">' + esc(lang.padEnd(12)) + '</span>  <span class="out-file">' + esc(code) + '</span>');
+      scrollToBottom();
+      setTimeout(emit, 180);
+    }
+    emit();
+  }
+
+  // fortune
+  function cmdFortune() {
+    const fortunes = [
+      'In production, no one can hear you scream.',
+      'It works on my laptop. Therefore, it must be a network problem.',
+      'There are two hard things in computer science: cache invalidation, naming things, and off-by-one errors.',
+      'The best monitoring is the one you trust at 3am.',
+      'A backup that has never been restored is not a backup. It\'s a hope.',
+      'Documentation is a love letter to your future self.',
+      'The cloud is just someone else\'s computer. Treat it that way.',
+      'Premature optimization is the root of all evil. So is its absence.',
+      'Infrastructure is poetry that doesn\'t rhyme but never falls down.',
+      'Every system grows until it can send email. Then it stops working.',
+      'A senior engineer is a junior engineer who survived their own decisions.',
+      'YAGNI is not a license to skip writing tests.',
+      'If your runbook starts with "first, panic", you have bigger problems.',
+      '99.9% uptime is great until you do the math on a calendar year.',
+      'The map is not the territory. The diagram is not the network.',
+    ];
+    const f = fortunes[Math.floor(Math.random() * fortunes.length)];
+    appendBlank();
+    appendHTML('<span class="out-dim">┌─ fortune ─</span>');
+    appendHTML('<span class="out-dim">│ </span><span class="out-file">' + esc(f) + '</span>');
+    appendHTML('<span class="out-dim">└─</span>');
+    appendBlank();
+  }
+
+  // coffee
+  function cmdCoffee() {
+    appendBlank();
+    appendHTML('<span class="out-warn">         (  )   (   )  )</span>');
+    appendHTML('<span class="out-warn">          ) (   )  (  (</span>');
+    appendHTML('<span class="out-warn">          ( )  (    ) )</span>');
+    appendHTML('<span class="out-info">         _____________</span>');
+    appendHTML('<span class="out-info">        &lt;_____________&gt; ___</span>');
+    appendHTML('<span class="out-info">        |             |/ _ \\</span>');
+    appendHTML('<span class="out-info">        |             | | |</span>');
+    appendHTML('<span class="out-info">        |             |_| |</span>');
+    appendHTML('<span class="out-info">     ___|             |\\___/</span>');
+    appendHTML('<span class="out-info">    /    \\___________/    \\</span>');
+    appendHTML('<span class="out-info">    \\_____________________/</span>');
+    appendBlank();
+    appendHTML('  <span class="out-dim">temperature:    </span><span class="out-warn">63°C</span>');
+    appendHTML('  <span class="out-dim">caffeine level: </span><span class="out-exec">optimal</span>');
+    appendHTML('  <span class="out-dim">refills today:  </span><span class="out-info">' + (2 + Math.floor(Math.random() * 4)) + '</span>');
+    appendBlank();
+    appendHTML('<span class="out-dim">"infrastructure runs on coffee. mine especially."</span>');
+    appendBlank();
+  }
+
+  // git log --author=luis
+  function cmdGit(args) {
+    const sub = args && args[0];
+    if (sub !== 'log') {
+      appendHTML('<span class="out-warn">git: only \'git log\' is implemented in this shell</span>');
+      appendHTML('<span class="out-dim">try: git log  or  git log --author=luis</span>');
+      return;
+    }
+    const commits = [
+      ['7d3a8c2', '2026-04', 'feat(career): launch rochaOS portfolio · pivot back to cloud'],
+      ['a91f2e4', '2026-03', 'study(aws): SAA-C03 in progress · 60% complete'],
+      ['c5b7d18', '2026-02', 'cert(aws): pass SAA-C03 Solutions Architect Associate'],
+      ['e84290f', '2026-01', 'feat(homelab): launch agente-ligacao · AI phone automation'],
+      ['9a3c4b1', '2024-05', 'promo: production team leader at brexa · multilingual ops'],
+      ['2f7e6d9', '2023-Q3', 'feat(homelab): wireguard · cloudflare DDNS · suricata IDS'],
+      ['8c1a5e7', '2022-Q2', 'feat(homelab): launch current homelab · OPNsense + Docker'],
+      ['b3d92f0', '2020-03', 'BREAKING: relocate to japan · learn JP · industrial pivot'],
+      ['51e67c4', '2018-01', 'graduate: B.Eng. Electrical Engineering · UNIP'],
+      ['a2f9d0b', '2015-Q3', 'feat(slac): hybrid AWS+on-prem · OpenVPN dual AD'],
+      ['6c8b3e2', '2014-Q3', 'feat(afv): multi-client AWS hosting · custom AMI · Route53'],
+      ['fd7521a', '2013-03', 'job: sole sysadmin at clinica jamal · 6 years · solo IT'],
+      ['1a3e8c5', '2011-07', 'cert: SENAI industrial automation diploma'],
+      ['9b4d6f3', '2009-10', 'init: industrial automation intern at compact · age 18'],
+    ];
+    const filterAuthor = args && args.find(a => a.startsWith('--author'));
+    appendBlank();
+    commits.forEach(([hash, date, msg]) => {
+      appendHTML('<span class="out-warn">commit ' + hash + 'b9e4f2c8a1d6</span>');
+      appendHTML('<span class="out-dim">Author:</span> <span class="out-file">Luis Rocha &lt;luis@rochaluis.com&gt;</span>');
+      appendHTML('<span class="out-dim">Date:</span>   <span class="out-file">' + date + '</span>');
+      appendBlank();
+      appendHTML('    <span class="out-info">' + esc(msg) + '</span>');
+      appendBlank();
+    });
+    appendHTML('<span class="out-dim">' + commits.length + ' commits over 17 years · main branch · zero force-pushes</span>');
+    appendBlank();
+  }
+
+  // recruiter — special message for recruiters
+  function cmdRecruiter() {
+    appendBlank();
+    appendHTML('<span class="out-info">▸ for recruiters</span>');
+    appendHTML('<span class="out-faint">' + '─'.repeat(40) + '</span>');
+    appendBlank();
+    appendHTML('  <span class="out-file">hi! glad you found this terminal.</span>');
+    appendBlank();
+    appendHTML('  <span class="out-file">if this format is too much, the boring resume</span>');
+    appendHTML('  <span class="out-file">is at option 9 in the menu (or run \'menu\').</span>');
+    appendBlank();
+    appendHTML('  <span class="out-info">quick facts:</span>');
+    appendHTML('    <span class="out-dim">·</span> 17 yrs technical · 6 yrs sysadmin');
+    appendHTML('    <span class="out-dim">·</span> AWS SAA-C03 in progress (60% complete)');
+    appendHTML('    <span class="out-dim">·</span> currently in <span class="out-warn">Japan</span> · open to <span class="out-exec">EU/Germany relocate</span>');
+    appendHTML('    <span class="out-dim">·</span> remote-friendly · JST flexible for EU/US');
+    appendHTML('    <span class="out-dim">·</span> notice period: ~30 days');
+    appendBlank();
+    appendHTML('  <span class="out-info">how to reach me:</span>');
+    appendHTML('    <span class="out-dim">$ </span><span class="cmd-link" data-cmd="hire">hire</span>      <span class="out-dim">→ direct contact info</span>');
+    appendHTML('    <span class="out-dim">$ </span><span class="cmd-link" data-cmd="resume">resume</span>    <span class="out-dim">→ structured CV</span>');
+    appendHTML('    <span class="out-dim">$ </span><span class="cmd-link" data-cmd="contact">contact</span>   <span class="out-dim">→ all channels</span>');
+    appendBlank();
+    appendHTML('  <span class="out-dim">a short message describing the role + team is enough.</span>');
+    appendHTML('  <span class="out-dim">i\'ll respond within 48h.</span>');
+    appendBlank();
+    appendHTML('<span class="out-faint">' + '─'.repeat(40) + '</span>');
+    appendBlank();
+  }
+
+
+  function cmdSystemctl(args) {
+    if (!requireSshHomeserver('systemctl')) return;
+    const sub = args && args[0];
+    if (sub !== 'status' && sub !== 'list-units') {
+      appendHTML('<span class="out-warn">systemctl: simulated · only \'status\' and \'list-units\' work</span>');
+      return;
+    }
+    appendHTML('<span class="out-info">● homeserver.rocha.lan</span>');
+    appendHTML('  <span class="out-dim">State:</span> <span class="out-exec">running</span>');
+    appendHTML('  <span class="out-dim">Jobs:</span> <span class="out-file">0 queued</span>');
+    appendHTML('  <span class="out-dim">Failed:</span> <span class="out-exec">0 units</span>');
+    appendHTML('  <span class="out-dim">Since:</span> <span class="out-file">2024-01-02 09:14:33 JST · 847d ago</span>');
+    appendBlank();
+    appendHTML('<span class="out-info">  ● docker.service           </span><span class="out-exec">active (running)</span>');
+    appendHTML('<span class="out-info">  ● ssh.service              </span><span class="out-exec">active (running)</span>');
+    appendHTML('<span class="out-info">  ● prometheus-node-exporter </span><span class="out-exec">active (running)</span>');
+    appendHTML('<span class="out-info">  ● cron.service             </span><span class="out-exec">active (running)</span>');
+    appendHTML('<span class="out-info">  ● rsyslog.service          </span><span class="out-exec">active (running)</span>');
+  }
+
+  // ─── HOST PROMPT UPDATE ───────────────────────────────────────────────────
+  // Update the prompt span colors when we switch between rochaOS and homeserver.
+  function updatePromptHost() {
+    // Only update the LIVE prompt, never historic prompt lines.
+    const livePrompt = document.getElementById('prompt');
+    if (!livePrompt) return;
+    const hostEl = livePrompt.querySelector('.ps-host');
+    if (hostEl) {
+      hostEl.textContent = state.host;
+      hostEl.style.color = state.host === 'homeserver' ? 'var(--path)' : 'var(--host)';
+    }
+    // Update document title to reflect current shell host
+    document.title = state.host === 'homeserver'
+      ? 'luis@homeserver — rochaOS'
+      : 'rochaOS — Luis Rocha · Cloud Infrastructure Engineer';
+  }
+
+
+  function cmdTheme(args) {
+    const arg = args && args[0];
+
+    // No arg: list themes (clickable)
+    if (!arg) {
+      const current = getCurrentThemeKey();
+      appendHTML('<span class="out-accent">Available terminal themes:</span>');
+      appendHTML('<span class="out-dim">click a row to apply · or use \'theme &lt;number&gt;\'</span>');
+      appendBlank();
+
+      THEME_BY_NUM.forEach((key, i) => {
+        const t = THEMES[key];
+        const num = String(i + 1).padStart(2, ' ');
+        const isActive = key === current;
+
+        const row = document.createElement('div');
+        row.className = 'line theme-row';
+        row.style.cursor = 'pointer';
+        row.style.padding = '4px 6px';
+        row.style.borderRadius = '2px';
+        row.style.transition = 'background 0.12s';
+        row.dataset.themeKey = key;
+
+        const swatch =
+          '<span style="display:inline-block;width:0.7em;height:0.7em;background:' + t.vars['--accent'] + ';margin-right:4px;border:1px solid ' + t.vars['--text-faint'] + ';vertical-align:middle"></span>' +
+          '<span style="display:inline-block;width:0.7em;height:0.7em;background:' + t.vars['--exec'] + ';margin-right:4px;border:1px solid ' + t.vars['--text-faint'] + ';vertical-align:middle"></span>' +
+          '<span style="display:inline-block;width:0.7em;height:0.7em;background:' + t.vars['--info'] + ';margin-right:8px;border:1px solid ' + t.vars['--text-faint'] + ';vertical-align:middle"></span>';
+
+        const label = t.label.padEnd(20);
+        const activeMark = isActive ? '<span class="out-exec"> ← current</span>' : '';
+
+        row.innerHTML =
+          '  <span class="out-info">[' + num + ']</span>  ' +
+          swatch +
+          '<span class="out-file">' + esc(label) + '</span>' +
+          '<span class="out-dim">' + esc(t.desc) + '</span>' +
+          activeMark;
+
+        // Hover effect
+        row.addEventListener('mouseenter', () => { row.style.background = 'var(--bg-soft)'; });
+        row.addEventListener('mouseleave', () => { row.style.background = 'transparent'; });
+
+        // Click applies theme
+        row.addEventListener('click', () => {
+          applyTheme(key);
+          // Visual feedback inline
+          row.style.background = 'var(--bg-soft)';
+          // Update markers across all sibling rows
+          const siblings = row.parentElement ? row.parentElement.querySelectorAll('.theme-row') : [];
+          siblings.forEach(sib => {
+            const sibKey = sib.dataset.themeKey;
+            const sibT = THEMES[sibKey];
+            const sibNum = String(THEME_BY_NUM.indexOf(sibKey) + 1).padStart(2, ' ');
+            const isNowActive = sibKey === key;
+            const sibSwatch =
+              '<span style="display:inline-block;width:0.7em;height:0.7em;background:' + sibT.vars['--accent'] + ';margin-right:4px;border:1px solid ' + sibT.vars['--text-faint'] + ';vertical-align:middle"></span>' +
+              '<span style="display:inline-block;width:0.7em;height:0.7em;background:' + sibT.vars['--exec'] + ';margin-right:4px;border:1px solid ' + sibT.vars['--text-faint'] + ';vertical-align:middle"></span>' +
+              '<span style="display:inline-block;width:0.7em;height:0.7em;background:' + sibT.vars['--info'] + ';margin-right:8px;border:1px solid ' + sibT.vars['--text-faint'] + ';vertical-align:middle"></span>';
+            sib.innerHTML =
+              '  <span class="out-info">[' + sibNum + ']</span>  ' +
+              sibSwatch +
+              '<span class="out-file">' + sibT.label.padEnd(20) + '</span>' +
+              '<span class="out-dim">' + esc(sibT.desc) + '</span>' +
+              (isNowActive ? '<span class="out-exec"> ← current</span>' : '');
+          });
+        });
+
+        getOutputTarget().appendChild(row);
+      });
+
+      appendBlank();
+      appendHTML('<span class="out-dim">usage: theme &lt;number&gt;  or  theme &lt;name&gt;</span>');
+      appendHTML('<span class="out-dim">example: theme 7   or   theme amber-crt</span>');
+      return;
+    }
+
+    // Try as number
+    let key = null;
+    if (/^\d+$/.test(arg)) {
+      const idx = parseInt(arg, 10) - 1;
+      if (idx >= 0 && idx < THEME_BY_NUM.length) key = THEME_BY_NUM[idx];
+    } else {
+      if (THEMES[arg]) key = arg;
+      else {
+        const matchKey = Object.keys(THEMES).find(k =>
+          k === arg || THEMES[k].label === arg || THEMES[k].label.startsWith(arg)
+        );
+        if (matchKey) key = matchKey;
+      }
+    }
+
+    if (!key) {
+      appendHTML('<span class="out-error">theme: unknown theme: ' + esc(arg) + '</span>');
+      appendHTML('<span class="out-dim">run \'theme\' to see available themes</span>');
+      return;
+    }
+
+    const ok = applyTheme(key);
+    if (ok) {
+      appendHTML('<span class="out-exec">theme applied: </span><span class="out-accent">' + esc(THEMES[key].label) + '</span>');
+      appendHTML('<span class="out-dim">' + esc(THEMES[key].desc) + '</span>');
+      appendHTML('<span class="out-faint">  → saved · will persist on reload</span>');
+    }
+  }
+
+
+  function cmdEcho(args) {
+    appendHTML(`<span class="out-file">${esc(args.join(' '))}</span>`);
+  }
+
+  function cmdHelp() {
+    const sections = [
+      { title: 'NAVIGATION', items: [
+        ['ls [-la] [path]',  'list directory contents'],
+        ['cd <dir>',         'change directory  (cd .. = up · cd ~ = home)'],
+        ['pwd',              'print working directory'],
+        ['tree [path]',      'show directory tree'],
+        ['cat <file>',       'print file contents'],
+        ['clear',            'clear the screen'],
+      ]},
+      { title: 'PROFILE & CONTENT', items: [
+        ['whoami',           'identity card · who I am'],
+        ['resume / cv',      'full CV breakdown'],
+        ['skills',           'technical skills by domain'],
+        ['certifications',   'AWS certs + completed courses'],
+        ['contact',          'how to reach me'],
+        ['hire',             'tell me you\'re interested'],
+      ]},
+      { title: 'EXTERNAL LINKS · open in new tab', items: [
+        ['github',           '→ github.com/rochaOps'],
+        ['linkedin',         '→ linkedin.com/in/rocha-luis'],
+        ['mail',             '→ luis@rochaluis.com'],
+        ['website',          '→ rochaluis.com'],
+      ]},
+      { title: 'SHELL', items: [
+        ['echo <text>',      'print text'],
+        ['history [-c]',     'show command history  (-c clears it)'],
+        ['!N  /  !!',        're-run history entry N (or last)'],
+        ['menu',             'return to system menu'],
+        ['help',             'show this help'],
+      ]},
+      { title: 'KEYBOARD', items: [
+        ['↑ / ↓',            'navigate command history'],
+        ['Tab',              'autocomplete command or path'],
+        ['Tab Tab',          'list possible completions'],
+        ['Ctrl+L',           'clear screen'],
+        ['Ctrl+C',           'cancel current line'],
+      ]},
+      { title: 'CUSTOMIZATION', items: [
+        ['theme [N|name]',    'change terminal palette · 9 themes'],
+      ]},
+      { title: 'NETWORK & DIAGNOSTICS', items: [
+        ['traceroute career', 'career path with hops + latencies'],
+        ['nmap -sV localhost','skills as open ports · service detection'],
+        ['render network',    'animated topology diagram'],
+      ]},
+      { title: 'HOMESERVER (via ssh)', items: [
+        ['ssh homeserver',    'connect to homelab server'],
+        ['docker ps',         'list running containers (after ssh)'],
+        ['docker stats',      'live container CPU/MEM (after ssh)'],
+        ['htop',              'system resources (after ssh)'],
+        ['uptime',            'system uptime'],
+        ['systemctl status',  'service status (after ssh)'],
+        ['exit / logout',     'disconnect from homeserver'],
+      ]},
+    ];
+
+    appendHTML('<span class="out-accent">rochaOS — available commands</span>');
+    appendBlank();
+    for (const sec of sections) {
+      appendHTML(`<span class="out-info">${sec.title}</span>`);
+      for (const [cmd, desc] of sec.items) {
+        const padded = cmd.padEnd(22);
+        appendHTML(`  <span class="out-exec">${esc(padded)}</span><span class="out-dim">${esc(desc)}</span>`);
+      }
+      appendBlank();
+    }
+    appendHTML('<span class="out-dim">tip: start with \'whoami\' or \'resume\' · explore /career and /projects with \'tree\'</span>');
+    appendHTML('<span class="out-faint">     this terminal also has a few easter eggs · keep poking around</span>');
+  }
+
+  function dispatch(line) {
+    const trimmed = line.trim();
+    if (trimmed === '') return;
+    const tokens = trimmed.split(/\s+/);
+    const cmd = tokens[0];
+    const args = tokens.slice(1);
+
+    switch (cmd) {
+      case 'ls':
+      case 'dir':      cmdLs(args); break;
+      case 'cd':       cmdCd(args); break;
+      case 'pwd':      cmdPwd(); break;
+      case 'tree':     cmdTree(args); break;
+      case 'cat':
+      case 'less':
+      case 'more':     cmdCat(args); break;
+      case 'clear':    cmdClear(); break;
+      case 'whoami':   cmdWhoami(); break;
+      case 'resume':
+      case 'cv':       cmdResume(); break;
+      case 'certifications':
+      case 'certs':
+      case 'cert':     cmdCertifications(); break;
+      case 'skills':   cmdSkills(); break;
+      case 'contact':  cmdContact(); break;
+      case 'hire':     cmdHire(); break;
+      case 'github':   cmdGithub(); break;
+      case 'linkedin': cmdLinkedin(); break;
+      case 'mail':
+      case 'email':    cmdMail(); break;
+      case 'website':  cmdWebsite(); break;
+      case 'theme':    cmdTheme(args); break;
+      case 'traceroute':
+      case 'tracert':  cmdTraceroute(args); break;
+      case 'nmap':     cmdNmap(args); break;
+      case 'render':   cmdRender(args); break;
+      case 'ssh':      cmdSsh(args); break;
+      case 'exit':
+      case 'logout':   cmdExit(); break;
+      case 'docker':   cmdDocker(args); break;
+      case 'uptime':   cmdUptime(); break;
+      case 'htop':     cmdHtop(); break;
+      case 'systemctl':cmdSystemctl(args); break;
+      // Easter eggs
+      case 'vim':
+      case 'vi':       cmdEditor('vim', args); break;
+      case 'nano':     cmdEditor('nano', args); break;
+      case 'emacs':    cmdEditor('emacs', args); break;
+      case ':q':
+      case ':q!':
+      case ':wq':
+      case ':qa':
+      case ':qa!':     cmdQuitVim(args); break;
+      case 'cowsay':   cmdCowsay(args); break;
+      case 'matrix':   cmdMatrix(); break;
+      case 'sudo':     cmdSudo(args); break;
+      case 'hello':    cmdHello(args); break;
+      case 'fortune':  cmdFortune(); break;
+      case 'coffee':   cmdCoffee(); break;
+      case 'git':      cmdGit(args); break;
+      case 'recruiter':cmdRecruiter(); break;
+      case 'echo':     cmdEcho(args); break;
+      case 'help':     cmdHelp(); break;
+      case 'history':  cmdHistory(args); break;
+      case 'menu':     cmdMenu(); break;
+      case 'man':
+        appendHTML(`<span class="out-warn">man pages not installed in this minimal shell</span>`);
+        appendHTML(`<span class="out-dim">try: help</span>`);
+        break;
+      default:
+        appendHTML(`<span class="out-error">${esc(cmd)}: command not found</span>`);
+        appendHTML(`<span class="out-dim">type 'help' to see available commands</span>`);
+    }
+  }
+
+  // ─── INPUT HANDLING ──────────────────────────────────────────
+  function focusInput() { input.focus(); }
+  function handleCmdLinkClick(cmd) {
+    if (!cmd) return;
+    // If inside menu overlay: run command into same mo-body, stay in menu
+    const moBody = document.getElementById('mo-body');
+    if (moBody) {
+      moBody.innerHTML = '';
+      setOutputContainer(moBody);
+      try { dispatch(cmd); }
+      catch (err) {
+        appendHTML(`<span class="out-error">internal error: ${esc(err.message)}</span>`);
+      }
+      scrollToBottom();
+      return;
+    }
+    // In shell: run normally
+    renderPromptHistoryLine(cmd);
+    try { dispatch(cmd); }
+    catch (err) {
+      appendHTML(`<span class="out-error">internal error: ${esc(err.message)}</span>`);
+    }
+    const trimmed = cmd.trim();
+    if (trimmed && state.history[state.history.length - 1] !== trimmed) {
+      state.history.push(trimmed);
+      persistHistory();
+    }
+    scrollToBottom();
+  }
+
+  terminal.addEventListener('click', (e) => {
+    // Clickable command links: run the command on click
+    const link = e.target.closest('.cmd-link');
+    if (link && link.dataset.cmd) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleCmdLinkClick(link.dataset.cmd);
+      return;
+    }
+    focusInput();
+  });
+  window.addEventListener('load', focusInput);
+
+  const cursor = document.getElementById('cursor');
+
+  function updateMirror() {
+    const v = input.value;
+    const pos = input.selectionStart != null ? input.selectionStart : v.length;
+    mirrorBefore.textContent = v.slice(0, pos);
+    // Char under cursor
+    const charAt = v[pos] || '';
+    cursor.setAttribute('data-char', charAt === ' ' ? '\u00a0' : charAt);
+    // After the cursor (skip the char that's now under cursor)
+    mirrorAfter.textContent = v.slice(pos + 1);
+  }
+
+  input.addEventListener('input', updateMirror);
+  input.addEventListener('click', updateMirror);
+  input.addEventListener('keyup', updateMirror);
+  // selectionchange fires on document — covers all caret movements
+  document.addEventListener('selectionchange', () => {
+    if (document.activeElement === input) updateMirror();
+  });
+
+  // ─── COMMAND LIST FOR AUTOCOMPLETE ────────────────────────────────────────
+  const KNOWN_COMMANDS = [
+    'ls', 'dir', 'cd', 'pwd', 'tree', 'cat', 'less', 'more',
+    'clear', 'echo', 'help', 'man',
+    'history', 'menu',
+    // Profile / content
+    'whoami', 'resume', 'cv', 'certifications', 'certs', 'cert',
+    'skills', 'contact', 'hire',
+    // External links
+    'github', 'linkedin', 'mail', 'email', 'website',
+    // Network & diagnostics (with animations)
+    'traceroute', 'tracert', 'nmap', 'render',
+    // SSH and homeserver-only commands
+    'ssh', 'exit', 'logout', 'docker', 'htop', 'uptime', 'systemctl',
+    // Theme system
+    'theme',
+    // Easter eggs
+    'vim', 'vi', 'nano', 'emacs', 'cowsay', 'matrix', 'sudo',
+    'hello', 'fortune', 'coffee', 'git', 'recruiter',
+  ];
+
+  // ─── HISTORY COMMAND ─────────────────────────────────────────
+  function cmdHistory(args) {
+    if (args && (args.includes('-c') || args.includes('--clear'))) {
+      state.history = [];
+      state.histIndex = -1;
+      state.histDraft = '';
+      if (state.host === 'rochaOS') {
+        try { localStorage.removeItem(HIST_KEY); } catch (e) {}
+      }
+      appendHTML('<span class="out-dim">history cleared (' + esc(state.host) + ')</span>');
+      return;
+    }
+    if (state.history.length === 0) {
+      appendHTML('<span class="out-dim">(history is empty on ' + esc(state.host) + ')</span>');
+      return;
+    }
+    state.history.forEach((line, i) => {
+      const num = String(i + 1).padStart(4, ' ');
+      appendHTML(`<span class="out-dim">${esc(num)}</span>  <span class="out-file">${esc(line)}</span>`);
+    });
+  }
+
+  // ─── HISTORY EXPANSION (!N, !!) ────────────────────────────────────────────
+  function expandHistory(line) {
+    const trimmed = line.trim();
+    if (trimmed === '!!') {
+      return state.history.length > 0 ? state.history[state.history.length - 1] : null;
+    }
+    const m = trimmed.match(/^!(\d+)$/);
+    if (m) {
+      const idx = parseInt(m[1], 10) - 1;
+      if (idx >= 0 && idx < state.history.length) return state.history[idx];
+      return null;
+    }
+    return line;
+  }
+
+  // ─── TAB AUTOCOMPLETE ────────────────────────────────────────
+  function listChildren(pathArr) {
+    const node = walk(pathArr);
+    if (!node || node.type !== 'dir') return [];
+    return Object.keys(node.children).sort();
+  }
+
+  function commonPrefix(strs) {
+    if (strs.length === 0) return '';
+    let prefix = strs[0];
+    for (let i = 1; i < strs.length; i++) {
+      while (!strs[i].startsWith(prefix)) {
+        prefix = prefix.slice(0, -1);
+        if (prefix === '') return '';
+      }
+    }
+    return prefix;
+  }
+
+  function tabComplete(value, doubleTab) {
+    // Determine context: completing command (first token) or path (later token)
+    const beforeCursor = value;
+    const tokens = beforeCursor.split(/\s+/);
+    const isCommandPos = tokens.length === 1;
+    const last = tokens[tokens.length - 1];
+
+    let candidates = [];
+    let baseDir = state.cwd;
+    let prefix = last;
+
+    if (isCommandPos) {
+      candidates = KNOWN_COMMANDS.filter(c => c.startsWith(last));
+    } else {
+      // Path completion. Split last token into dir + name prefix.
+      let dirPart = '';
+      let namePart = last;
+      const lastSlash = last.lastIndexOf('/');
+      if (lastSlash >= 0) {
+        dirPart = last.slice(0, lastSlash + 1);
+        namePart = last.slice(lastSlash + 1);
+      }
+      let resolveTarget;
+      if (dirPart === '') {
+        resolveTarget = state.cwd;
+      } else {
+        resolveTarget = resolvePath(dirPart);
+      }
+      const items = listChildren(resolveTarget);
+      const matches = items.filter(n => n.startsWith(namePart));
+      // Add trailing slash for dirs
+      const targetNode = walk(resolveTarget);
+      candidates = matches.map(n => {
+        const child = targetNode && targetNode.type === 'dir' ? targetNode.children[n] : null;
+        return child && child.type === 'dir' ? n + '/' : n;
+      });
+      prefix = namePart;
+      // Reconstruct: replace last token with dirPart + completed
+      var dirPrefix = dirPart;
+    }
+
+    if (candidates.length === 0) {
+      return { newValue: value, listed: false };
+    }
+
+    if (candidates.length === 1) {
+      const completed = candidates[0];
+      let newLast;
+      if (isCommandPos) {
+        newLast = completed + ' ';
+      } else {
+        // path — only add space if not a directory
+        newLast = dirPrefix + completed;
+        if (!completed.endsWith('/')) newLast += ' ';
+      }
+      tokens[tokens.length - 1] = newLast;
+      return { newValue: tokens.join(' '), listed: false };
+    }
+
+    // Multiple matches: extend to common prefix
+    const cp = commonPrefix(candidates.map(c => c.replace(/\/$/, '')));
+    const currentLast = isCommandPos ? last : last.slice(last.lastIndexOf('/') + 1);
+    if (cp.length > currentLast.length) {
+      let newLast;
+      if (isCommandPos) {
+        newLast = cp;
+      } else {
+        newLast = dirPrefix + cp;
+      }
+      tokens[tokens.length - 1] = newLast;
+      return { newValue: tokens.join(' '), listed: false };
+    }
+
+    // Already at common prefix. On double-tab, list options
+    if (doubleTab) {
+      // Print current prompt + value, then candidates, then re-show prompt
+      renderPromptHistoryLine(value);
+      const cols = 4;
+      const colWidth = Math.max(...candidates.map(c => c.length)) + 4;
+      let line = '';
+      candidates.forEach((c, i) => {
+        const padded = c.padEnd(colWidth);
+        const isDir = c.endsWith('/');
+        const cls = isDir ? 'out-dir' : (c.endsWith('.json') || c.endsWith('.yml') ? 'out-warn' : (KNOWN_COMMANDS.includes(c) ? 'out-exec' : 'out-file'));
+        line += `<span class="${cls}">${esc(padded)}</span>`;
+        if ((i + 1) % cols === 0) {
+          appendHTML(line); line = '';
+        }
+      });
+      if (line) appendHTML(line);
+      scrollToBottom();
+      return { newValue: value, listed: true };
+    }
+
+    return { newValue: value, listed: false };
+  }
+
+  // ─── KEYDOWN HANDLER (Task 3) ─────────────────────────────────────────────
+  input.addEventListener('keydown', (e) => {
+
+    // Ctrl+L = clear
+    if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) {
+      e.preventDefault();
+      cmdClear();
+      return;
+    }
+
+    // Ctrl+C = cancel current line
+    if (e.ctrlKey && (e.key === 'c' || e.key === 'C')) {
+      // Allow normal copy behavior if there's a selection
+      const sel = window.getSelection();
+      if (sel && sel.toString().length > 0) return;
+      e.preventDefault();
+      const cur = input.value;
+      renderPromptHistoryLine(cur + '^C');
+      input.value = '';
+      updateMirror();
+      state.histIndex = -1;
+      state.histDraft = '';
+      state.tabPrev = null;
+      scrollToBottom();
+      return;
+    }
+
+    // Tab autocomplete
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const isDouble = state.tabPrev === input.value;
+      const result = tabComplete(input.value, isDouble);
+      state.tabPrev = result.listed ? null : result.newValue;
+      if (result.newValue !== input.value) {
+        input.value = result.newValue;
+        updateMirror();
+      }
+      // Move caret to end
+      setTimeout(() => { input.setSelectionRange(input.value.length, input.value.length); }, 0);
+      return;
+    }
+
+    // Up arrow = back in history
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (state.history.length === 0) return;
+      if (state.histIndex === -1) {
+        state.histDraft = input.value;
+        state.histIndex = state.history.length - 1;
+      } else if (state.histIndex > 0) {
+        state.histIndex--;
+      }
+      input.value = state.history[state.histIndex] || '';
+      updateMirror();
+      setTimeout(() => { input.setSelectionRange(input.value.length, input.value.length); }, 0);
+      state.tabPrev = null;
+      return;
+    }
+
+    // Down arrow = forward in history
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (state.histIndex === -1) return;
+      if (state.histIndex < state.history.length - 1) {
+        state.histIndex++;
+        input.value = state.history[state.histIndex];
+      } else {
+        state.histIndex = -1;
+        input.value = state.histDraft;
+        state.histDraft = '';
+      }
+      updateMirror();
+      setTimeout(() => { input.setSelectionRange(input.value.length, input.value.length); }, 0);
+      state.tabPrev = null;
+      return;
+    }
+
+    // Enter = execute
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      let cmd = input.value;
+      const expanded = expandHistory(cmd);
+      if (expanded === null) {
+        renderPromptHistoryLine(cmd);
+        appendHTML(`<span class="out-error">${esc(cmd)}: event not found</span>`);
+        input.value = '';
+        updateMirror();
+        state.histIndex = -1;
+        state.tabPrev = null;
+        scrollToBottom();
+        return;
+      }
+      if (expanded !== cmd) {
+        // History expansion: show what's about to run, then run it
+        renderPromptHistoryLine(expanded);
+        cmd = expanded;
+      } else {
+        renderPromptHistoryLine(cmd);
+      }
+
+      // Add to history if non-empty and not duplicate of last
+      const trimmed = cmd.trim();
+      if (trimmed) {
+        if (state.history[state.history.length - 1] !== trimmed) {
+          state.history.push(trimmed);
+          persistHistory();
+        }
+      }
+      state.histIndex = -1;
+      state.histDraft = '';
+      state.tabPrev = null;
+
+      try { dispatch(cmd); }
+      catch (err) {
+        appendHTML(`<span class="out-error">internal error: ${esc(err.message)}</span>`);
+        console.error(err);
+      }
+      input.value = '';
+      updateMirror();
+      scrollToBottom();
+      return;
+    }
+
+    // Any other key invalidates double-tab
+    state.tabPrev = null;
+  });
+
+  // ─── BOOT SEQUENCE (Task 4) ───────────────────────────────────────────────
+  const bootScreen = document.getElementById('boot-screen');
+  const bootContent = document.getElementById('boot-content');
+  const bootSkipHint = document.getElementById('boot-skip-hint');
+
+  // Boot lines: [delay_ms_before, html_content]
+  // Cumulative timing — adjusted to feel like real Linux boot pacing
+  const BOOT_LINES = [
+    [0,    `<span class="b-info">rochaOS 26.04 "Komaki Stable"</span>`],
+    [40,   `<span class="b-dim">copyright (c) 2009-2026 luis rocha · github.com/rochaOps</span>`],
+    [40,   ``],
+    [80,   `<span class="b-tag">[BIOS]</span> <span class="b-bright">POST...</span>`],
+    [180,  `<span class="b-tag">[BIOS]</span> CPU0: <span class="b-bright">AWS Solutions Architect</span> <span class="b-dim">(SAA-C03)</span>                <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [80,   `<span class="b-tag">[BIOS]</span> CPU1: <span class="b-bright">AWS SAA-C03</span> <span class="b-dim">(in progress)</span>                        <span class="b-bracket-l">[</span> <span class="b-warn">..</span> <span class="b-bracket-r">]</span>`],
+    [60,   `<span class="b-tag">[BIOS]</span> Memory: <span class="b-bright">6+ years sysadmin</span> <span class="b-dim">· 17+ years technical</span>          <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [60,   `<span class="b-tag">[BIOS]</span> Boot device: <span class="b-bright">/dev/career0</span> detected                       <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [60,   `<span class="b-tag">[BIOS]</span> Locale chips: <span class="b-bright">pt_BR · en_US · ja_JP</span>                       <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [120,  ``],
+    [40,   `<span class="b-tag">[INIT]</span> <span class="b-bright">starting kernel 6.1.0-rocha-amd64...</span>`],
+    [80,   `<span class="b-time">[    0.000000]</span> Linux version 6.1.0-rocha (build@komaki) <span class="b-dim">debian-based</span>`],
+    [40,   `<span class="b-time">[    0.001423]</span> Hostname: <span class="b-bright">rochaOS</span>`],
+    [40,   `<span class="b-time">[    0.002817]</span> Timezone: Asia/Tokyo (JST · UTC+9)`],
+    [40,   `<span class="b-time">[    0.004102]</span> Loading firmware: <span class="b-info">linux/networking.fw</span>             <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [60,   `<span class="b-time">[    0.005881]</span> <span class="b-bright">Detecting hardware...</span>`],
+    [80,   `<span class="b-time">[    0.012933]</span>   eth0: <span class="b-info">opnsense 26.1</span>                                <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.014217]</span>   eth1: <span class="b-info">cisco catalyst 2960</span>                          <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.015684]</span>   wlan0: <span class="b-info">unifi u6-lite</span> <span class="b-dim">(4 SSIDs)</span>                       <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.017102]</span>   sda: <span class="b-info">synology DS220+</span> <span class="b-dim">(NFS)</span>                          <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.018844]</span>   wg0: <span class="b-info">wireguard tunnel</span>                                <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [80,   `<span class="b-time">[    0.019447]</span> <span class="b-bright">Mounting filesystems...</span>`],
+    [60,   `<span class="b-time">[    0.022801]</span>   /mnt/2009-2012  <span class="b-dim">industrial automation (compact)</span>     <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.024155]</span>   /mnt/2013-2019  <span class="b-dim">clínica jamal · sole sysadmin</span>      <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.025419]</span>   /mnt/2015-2016  <span class="b-dim">slac hybrid aws · freelance</span>        <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.026419]</span>   /mnt/2020-2024  <span class="b-dim">japan transition · factory floor</span>   <span class="b-bracket-l">[</span> <span class="b-warn">NOTE</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.027944]</span>   /mnt/2024-pres  <span class="b-dim">cloud pivot · aws certified</span>        <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [80,   `<span class="b-time">[    0.030122]</span> <span class="b-bright">Starting services...</span>`],
+    [60,   `<span class="b-time">[    0.032455]</span>   systemd[1]: <span class="b-info">docker.service</span>                          <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.033912]</span>   systemd[1]: <span class="b-info">prometheus.service</span>                      <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.035288]</span>   systemd[1]: <span class="b-info">grafana.service</span>                         <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.036774]</span>   systemd[1]: <span class="b-info">loki.service</span>                            <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.037512]</span>   systemd[1]: <span class="b-info">vaultwarden.service</span>                     <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.038155]</span>   systemd[1]: <span class="b-info">agente-ligacao.service</span>                  <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.039911]</span>   systemd[1]: <span class="b-info">portfolio.service</span>                       <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [80,   `<span class="b-time">[    0.040332]</span> Network online · cloudflare DNS active            <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.042788]</span> Suricata IDS armed · ET Open + abuse.ch          <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.044511]</span> WireGuard tunnel: ready                            <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [40,   `<span class="b-time">[    0.046120]</span> Backup retention policy: <span class="b-bright">verified</span>                  <span class="b-bracket-l">[</span> <span class="b-ok">OK</span> <span class="b-bracket-r">]</span>`],
+    [120,  ``],
+    [40,   `<span class="b-bright">systemd boot complete</span> · ready in <span class="b-ok">2.7s</span> · <span class="b-ok">0 errors</span>`],
+    [180,  ``],
+    [40,   `<span class="b-info">[ welcome to rochaOS ]</span>`],
+  ];
+
+  let bootTimers = [];
+  let bootDone = false;
+  let menuShown = false;
+  let shellEntered = false;
+
+  function clearBootTimers() {
+    bootTimers.forEach(t => clearTimeout(t));
+    bootTimers = [];
+  }
+
+  function endBoot() {
+    if (bootDone) return;
+    bootDone = true;
+    clearBootTimers();
+    bootScreen.style.display = 'none';
+    if (bootSkipHint) bootSkipHint.style.display = 'none';
+    document.removeEventListener('keydown', skipBootHandler);
+  }
+
+  // Goes from anywhere to the menu screen
+  function showMenu() {
+    endBoot();
+    terminal.style.display = 'none';
+    menuScreen.style.display = 'block';
+    menuShown = true;
+    renderMenu();
+    setTimeout(() => menuInput.focus(), 30);
+  }
+
+  // Goes from menu (option 1) into the shell with MOTD
+  function enterShell() {
+    menuScreen.style.display = 'none';
+    menuShown = false;
+    terminal.style.display = 'block';
+    if (!shellEntered) {
+      shellEntered = true;
+      showMOTD();
+    }
+    updatePromptPath();
+    focusInput();
+    scrollToBottom();
+  }
+
+  // Legacy alias for click/Enter from boot (now goes to menu)
+  function showShell() { showMenu(); }
+
+  function skipBootHandler(e) {
+    if (e.key === 'Enter' || e.key === 'Escape' || e.key === 's' || e.key === 'S') {
+      e.preventDefault();
+      showShell();
+    }
+  }
+  document.addEventListener('keydown', skipBootHandler);
+  bootScreen.addEventListener('click', showShell);
+
+  // Schedule boot lines
+  let cumulative = 0;
+  BOOT_LINES.forEach(([delay, html], i) => {
+    cumulative += delay;
+    const t = setTimeout(() => {
+      if (bootDone) return;
+      const div = document.createElement('div');
+      div.className = 'b-line';
+      div.innerHTML = html || '&nbsp;';
+      bootContent.appendChild(div);
+      // Auto-scroll boot content
+      bootScreen.scrollTop = bootScreen.scrollHeight;
+    }, cumulative);
+    bootTimers.push(t);
+  });
+
+  // After last line, wait briefly then auto-transition
+  bootTimers.push(setTimeout(() => {
+    if (!bootDone) showShell();
+  }, cumulative + 800));
+
+  // ─── MENU SCREEN (Task 5) ──────────────────────────────────────────────────
+  const menuScreen = document.getElementById('menu-screen');
+  const menuContent = document.getElementById('menu-content');
+
+  const MENU_OPTIONS = [
+    { n:  1, title: 'Run shell',         desc: 'interactive command line',          action: 'shell' },
+    { n:  2, title: 'About me',          desc: 'whoami · who I am',                 action: 'cmd', cmd: 'whoami' },
+    { n:  3, title: 'Career',            desc: 'timeline · experience',             action: 'cmd', cmd: 'cat career/trajectory.md' },
+    { n:  4, title: 'Projects',          desc: 'homelab · agente-ligação · slac · afv', action: 'cmd', cmd: 'ls projects/' },
+    { n:  5, title: 'Skills',            desc: 'cloud · networking · automation',   action: 'cmd', cmd: 'skills' },
+    { n:  6, title: 'Network',           desc: 'animated topology render',         action: 'cmd', cmd: 'render network' },
+    { n:  7, title: 'Certifications',    desc: 'AWS + courses',                     action: 'cmd', cmd: 'certifications' },
+    { n:  8, title: 'Contact',           desc: 'github · linkedin · email',         action: 'cmd', cmd: 'contact' },
+    { n:  9, title: 'Boring resume',     desc: 'classic HTML view ↗',               action: 'external', url: 'boring_resume.html' },
+    { n: 10, title: 'Theme',             desc: 'change terminal color scheme',      action: 'cmd', cmd: 'theme' },
+    { n:  0, title: 'Reboot',            desc: 'reload rochaOS',                    action: 'reboot' },
+  ];
+
+  function renderMenu() {
+    menuContent.innerHTML = '';
+
+    // Banner
+    const lines = [
+      '<span class="m-banner-line">═══════════════════════════════════════════════════════════</span>',
+      '<span class="m-banner-line">  rochaOS 26.04 "Komaki Stable"</span>     <span class="m-label">|  HOSTNAME:</span> <span class="m-value">rocha</span>',
+      '<span class="m-banner-line">═══════════════════════════════════════════════════════════</span>',
+      '',
+      '  <span class="m-label">WAN  (igb1)        →</span>  <span class="m-value">PPPoE</span> · <span class="m-status-ok">●● online</span>',
+      '  <span class="m-label">LAN  (igb2)        →</span>  <span class="m-value">10.10.1.0/24</span> · <span class="m-status-ok">up</span>',
+      '  <span class="m-label">WIFI (igb3 trunk)  →</span>  <span class="m-value">UniFi U6</span> · <span class="m-value">4 SSIDs</span>',
+      '  <span class="m-label">HLAB (igb4)        →</span>  <span class="m-value">10.10.6.0/24</span> · <span class="m-status-ok">homeserver up</span>',
+      '',
+      '<span class="m-section">// Menu</span>',
+    ];
+    for (const l of lines) {
+      const div = document.createElement('div');
+      div.innerHTML = l || '&nbsp;';
+      menuContent.appendChild(div);
+    }
+
+    // Options as clickable rows
+    for (const opt of MENU_OPTIONS) {
+      const row = document.createElement('div');
+      row.className = 'm-option';
+      row.dataset.opt = String(opt.n);
+      const num = String(opt.n).padStart(2, ' ');
+      row.innerHTML =
+        '<span class="m-num"><span class="m-num-bracket">[</span>' + esc(num) + '<span class="m-num-bracket">]</span></span>' +
+        '<span class="m-title">' + esc(opt.title) + '</span>' +
+        '<span class="m-desc">' + esc(opt.desc) + '</span>';
+      row.addEventListener('click', () => executeMenuOption(opt.n));
+      menuContent.appendChild(row);
+    }
+
+    // Prompt
+    const prompt = document.createElement('div');
+    prompt.className = 'm-prompt';
+    prompt.innerHTML =
+      '<span class="m-prompt-label">Enter an option:</span>' +
+      '<div class="m-prompt-input">' +
+        '<span id="menu-input-mirror-before"></span>' +
+        '<span id="menu-cursor"></span>' +
+        '<span id="menu-input-mirror-after"></span>' +
+        '<input id="menu-cmd-input" type="text" inputmode="numeric" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />' +
+      '</div>';
+    menuContent.appendChild(prompt);
+
+    const hint = document.createElement('div');
+    hint.className = 'm-info';
+    hint.innerHTML = '<span>tip: 2-8, 10 stay in menu · option 1 enters interactive shell · Esc closes overlays</span>';
+    menuContent.appendChild(hint);
+
+    // Wire up input
+    setupMenuInput();
+  }
+
+  let menuInput = null;
+  let menuMirrorBefore = null;
+  let menuMirrorAfter = null;
+  let menuCursor = null;
+
+  function setupMenuInput() {
+    menuInput = document.getElementById('menu-cmd-input');
+    menuMirrorBefore = document.getElementById('menu-input-mirror-before');
+    menuMirrorAfter = document.getElementById('menu-input-mirror-after');
+    menuCursor = document.getElementById('menu-cursor');
+
+    function updateMenuMirror() {
+      const v = menuInput.value;
+      const pos = menuInput.selectionStart != null ? menuInput.selectionStart : v.length;
+      menuMirrorBefore.textContent = v.slice(0, pos);
+      const charAt = v[pos] || '';
+      menuCursor.setAttribute('data-char', charAt === ' ' ? '\u00a0' : charAt);
+      menuMirrorAfter.textContent = v.slice(pos + 1);
+    }
+
+    menuInput.addEventListener('input', updateMenuMirror);
+    menuInput.addEventListener('click', updateMenuMirror);
+    menuInput.addEventListener('keyup', updateMenuMirror);
+
+    function submitMenuOption() {
+      const val = menuInput.value.trim();
+      menuInput.value = '';
+      updateMenuMirror();
+      if (val === '') return;
+      const n = parseInt(val, 10);
+      if (isNaN(n) || !MENU_OPTIONS.some(o => o.n === n)) {
+        showMenuError(`Invalid option: ${esc(val)}`);
+        return;
+      }
+      executeMenuOption(n);
+    }
+
+    menuInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitMenuOption();
+      }
+    });
+
+    // iOS numeric keypad "Done"/"OK" button doesn't fire Enter.
+    // It blurs the input. We catch the blur and submit if value is set.
+    menuInput.addEventListener('blur', () => {
+      // Small delay so click on .m-option still works
+      setTimeout(() => {
+        if (menuInput.value.trim() !== '' && menuShown) {
+          submitMenuOption();
+        }
+      }, 100);
+    });
+
+    // Auto-submit on input when value is unambiguous: any single digit 0-9
+    // except '1' (which could be either '1' or '10').
+    // After 200ms of no further input, submit anyway.
+    let autoSubmitTimer = null;
+    menuInput.addEventListener('input', () => {
+      if (autoSubmitTimer) { clearTimeout(autoSubmitTimer); autoSubmitTimer = null; }
+      const v = menuInput.value.trim();
+      if (v === '') return;
+      // If value is 2 digits (10) — submit immediately
+      if (/^\d{2}$/.test(v)) {
+        autoSubmitTimer = setTimeout(submitMenuOption, 80);
+        return;
+      }
+      // If single digit but NOT '1' (which could become '10'), submit after short delay
+      if (/^[02-9]$/.test(v)) {
+        autoSubmitTimer = setTimeout(submitMenuOption, 350);
+        return;
+      }
+      // If '1', wait longer in case user types another digit
+      if (v === '1') {
+        autoSubmitTimer = setTimeout(submitMenuOption, 700);
+        return;
+      }
+    });
+
+    // Keep focus — but not when overlay is open or click landed inside overlay
+    menuScreen.addEventListener('click', (e) => {
+      if (e.target.closest('.m-option')) return; // option click handled separately
+      if (e.target.closest('#menu-output')) return; // overlay handles its own focus
+      if (document.getElementById('menu-output')) return; // overlay is open
+      menuInput.focus();
+    });
+  }
+
+  function showMenuError(msg) {
+    // Remove old error if any
+    const old = menuContent.querySelector('.m-error');
+    if (old) old.remove();
+    const err = document.createElement('div');
+    err.className = 'm-error';
+    err.innerHTML = msg + ' <span class="out-dim">(try a number 0-10)</span>';
+    menuContent.appendChild(err);
+  }
+
+  function executeMenuOption(n) {
+    const opt = MENU_OPTIONS.find(o => o.n === n);
+    if (!opt) return;
+
+    if (opt.action === 'shell') {
+      enterShell();
+      return;
+    }
+    if (opt.action === 'reboot') {
+      // Visual reboot: clear screen, show "rebooting...", then reload
+      menuContent.innerHTML = '<div class="m-banner-line">rebooting rochaOS...</div>' +
+        '<div class="m-info">unmounting filesystems · stopping services · halting kernel</div>';
+      try { sessionStorage.removeItem('rochaOS:bootDone'); } catch (e) {}
+      setTimeout(() => location.reload(), 900);
+      return;
+    }
+    if (opt.action === 'external') {
+      window.open(opt.url, '_blank', 'noopener');
+      // Stay on menu
+      return;
+    }
+    if (opt.action === 'cmd') {
+      showMenuOutput(opt);
+      return;
+    }
+  }
+
+  // ─── MENU OUTPUT OVERLAY ──────────────────────────────────────────────────
+  // Renders shell command output inside the menu, with back button.
+  // Uses a temporary DOM swap so existing append* functions write into the overlay.
+  function showMenuOutput(opt) {
+    // Clear any previous overlay
+    const existing = document.getElementById('menu-output');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'menu-output';
+    overlay.className = 'is-open';
+    overlay.innerHTML =
+      '<div class="mo-header">' +
+        '<span class="mo-title" id="mo-title">// option ' + opt.n + ' · ' + esc(opt.title) + '</span>' +
+        '<span class="mo-cmd" id="mo-cmd">$ ' + esc(opt.cmd) + '</span>' +
+        '<button class="mo-back" id="mo-back-btn">← back to menu</button>' +
+      '</div>' +
+      '<div class="mo-body" id="mo-body"></div>';
+    menuContent.appendChild(overlay);
+
+    const moBody = document.getElementById('mo-body');
+
+    // Navigation stack: [{title, cmd, html}]
+    const navStack = [];
+
+    function renderCmd(title, cmd) {
+      moBody.innerHTML = '';
+      setOutputContainer(moBody);
+      // Update header
+      document.getElementById('mo-title').textContent = title;
+      document.getElementById('mo-cmd').textContent = '$ ' + cmd;
+      // Update back button label
+      const backBtn = document.getElementById('mo-back-btn');
+      backBtn.textContent = navStack.length > 0 ? '← back' : '← back to menu';
+      try { dispatch(cmd); }
+      catch (err) {
+        appendHTML(`<span class="out-error">internal error: ${esc(err.message)}</span>`);
+        console.error(err);
+      }
+      scrollToBottom();
+    }
+
+    // Disable menu input while overlay open
+    if (menuInput) {
+      menuInput.value = '';
+      if (menuMirrorBefore) menuMirrorBefore.textContent = '';
+      if (menuMirrorAfter) menuMirrorAfter.textContent = '';
+      if (menuCursor) menuCursor.setAttribute('data-char', '');
+      menuInput.blur();
+      menuInput.disabled = true;
+    }
+
+    // Initial render
+    renderCmd('// option ' + opt.n + ' · ' + opt.title, opt.cmd);
+
+    function closeOverlay() {
+      overlay.remove();
+      clearOutputContainer();
+      document.removeEventListener('keydown', escClose);
+      if (menuInput) {
+        menuInput.disabled = false;
+        if (!window.matchMedia || !window.matchMedia('(max-width: 640px)').matches) {
+          menuInput.focus();
+        }
+      }
+    }
+
+    // Back button: go to previous in stack, or close overlay
+    document.getElementById('mo-back-btn').addEventListener('click', () => {
+      if (navStack.length > 0) {
+        const prev = navStack.pop();
+        renderCmd(prev.title, prev.cmd);
+      } else {
+        closeOverlay();
+      }
+    });
+
+    // Clickable links inside overlay: push current to stack, render new cmd
+    overlay.addEventListener('click', (e) => {
+      const link = e.target.closest('.cmd-link');
+      if (link && link.dataset.cmd) {
+        e.preventDefault();
+        e.stopPropagation();
+        navStack.push({
+          title: document.getElementById('mo-title').textContent,
+          cmd: document.getElementById('mo-cmd').textContent.replace(/^\$ /, ''),
+        });
+        if (navStack.length > 10) navStack.shift();
+        renderCmd('// ' + link.dataset.cmd, link.dataset.cmd);
+        return;
+      }
+      const projLink = e.target.closest('[data-project]');
+      if (projLink) {
+        e.preventDefault();
+        e.stopPropagation();
+        navStack.push({
+          title: document.getElementById('mo-title').textContent,
+          cmd: document.getElementById('mo-cmd').textContent.replace(/^\$ /, ''),
+        });
+        if (navStack.length > 10) navStack.shift();
+        const cmd = `cat projects/${projLink.dataset.project}.md`;
+        renderCmd('// ' + projLink.dataset.project, cmd);
+        return;
+      }
+    });
+
+    // Esc closes overlay
+    function escClose(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeOverlay();
+      }
+    }
+    document.addEventListener('keydown', escClose);
+
+    // Scroll overlay into view
+    overlay.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Run a function while temporarily redirecting getOutputTarget().appendChild to a target container.
+  // This lets us reuse all the dispatch/append* functions to write into a different DOM node.
+  // Async-friendly output redirect: all append* go through this getter.
+  // Stays in effect across setTimeout/animation callbacks until explicitly cleared.
+  let outputContainer = null;  // null = use real history element
+
+  function getOutputTarget() {
+    return outputContainer || history;
+  }
+
+  function setOutputContainer(container) {
+    outputContainer = container;
+  }
+
+  function clearOutputContainer() {
+    outputContainer = null;
+  }
+
+  // Run a function with output redirected. Caller is responsible for calling
+  // clearOutputContainer() when async work is done (e.g. on overlay close).
+  function runIntoContainer(container, fn) {
+    setOutputContainer(container);
+    try { fn(); }
+    catch (e) { clearOutputContainer(); throw e; }
+    // Don't auto-clear — async work might still be running.
+    // The caller (closeOverlay) clears it.
+  }
+
+
+  // ─── menu COMMAND (callable from shell) ──────────────────────────────────
+  function cmdMenu() {
+    showMenu();
+  }
+
+  // Track session start for live uptime
+  const sessionStart = Date.now();
+
+  function formatUptime(ms) {
+    const s = Math.floor(ms / 1000);
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ${s % 60}s`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ${m % 60}m`;
+    const d = Math.floor(h / 24);
+    return `${d}d ${h % 24}h`;
+  }
+
+  function showMOTD() {
+    // Box width: characters between the two │ bars
+    // On mobile use narrower box to avoid horizontal scroll
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+    const W = isMobile ? 36 : 53;
+    const indent = isMobile ? '' : '       ';
+
+    // Helper: build a box line. content is plain text length used for padding;
+    // contentHTML is the actual HTML to render inside the bars.
+    // Strip HTML tags to compute visible character length.
+    // Note: we count Unicode code points (including emoji like ●), not UTF-16 code units.
+    function visibleLen(html) {
+      const text = html.replace(/<[^>]*>/g, '');
+      // Use Array.from to count code points correctly
+      return Array.from(text).length;
+    }
+
+    // Auto-measured: just pass the HTML, we compute padding from visible chars
+    function boxLine(contentHTML) {
+      const plainLen = visibleLen(contentHTML);
+      const pad = Math.max(0, W - plainLen);
+      return indent +
+        '<span class="out-info">│</span>' +
+        contentHTML +
+        ' '.repeat(pad) +
+        '<span class="out-info">│</span>';
+    }
+
+    function boxBlank() {
+      return indent +
+        '<span class="out-info">│</span>' +
+        ' '.repeat(W) +
+        '<span class="out-info">│</span>';
+    }
+
+    function boxTop() {
+      const fullTitle = '─[ rochaOS · 26.04 "Komaki Stable" ]';
+      const shortTitle = '─[ rochaOS 26.04 ]';
+      const title = (W >= fullTitle.length + 1) ? fullTitle : shortTitle;
+      const fill = '─'.repeat(Math.max(1, W - title.length));
+      return indent + '<span class="out-info">┌' + title + fill + '┐</span>';
+    }
+
+    function boxBottom() {
+      return indent + '<span class="out-info">└' + '─'.repeat(W) + '┘</span>';
+    }
+
+    appendHTML(boxTop());
+    appendHTML(boxBlank());
+
+    // Logo: use simpler ASCII on mobile (block-drawing chars don't render
+    // mono-width in iOS Safari fallback fonts and break alignment)
+    if (isMobile) {
+      // Simple, mono-safe text logo
+      appendHTML(boxLine('   <span class="out-accent">[ R O C H A ]</span>'));
+    } else {
+      // Desktop block-style logo
+      appendHTML(boxLine('   <span class="out-accent">██▀▄  ▄▀▀▄ ▄▀▀▄ █  █ ▄▀▀▄</span>'));
+      appendHTML(boxLine('   <span class="out-accent">█▀▄   █  █ █    ████ █▀▀█</span>'));
+      appendHTML(boxLine('   <span class="out-accent">▀  ▀  ▀▀   ▀▀▀▀ █  █ ▀  ▀</span>'));
+    }
+    appendHTML(boxBlank());
+
+    // Live session uptime line — placeholder we'll keep updating
+    const upDiv = document.createElement('div');
+    upDiv.className = 'line';
+    upDiv.id = 'motd-uptime';
+    getOutputTarget().appendChild(upDiv);
+    function renderUp() {
+      const up = formatUptime(Date.now() - sessionStart);
+      const content = isMobile
+        ? ' <span class="out-dim">session: </span> <span class="out-exec">' + esc(up) + '</span>'
+        : '   <span class="out-dim">session:   </span><span class="out-exec">' + esc(up) + '</span>';
+      upDiv.innerHTML = boxLine(content);
+    }
+    renderUp();
+    setInterval(renderUp, 1000);
+
+    if (isMobile) {
+      // Compact mobile content
+      appendHTML(boxLine(' <span class="out-dim">homelab: </span><span class="out-exec">847d · 0 incidents</span>'));
+      appendHTML(boxLine(' <span class="out-dim">location:</span> komaki, jp'));
+      appendHTML(boxLine(' <span class="out-dim">status:  </span><span class="out-exec">● connections open</span>'));
+      appendHTML(boxBlank());
+      appendHTML(boxLine(' <span class="out-dim">"poetry that doesn\'t rhyme</span>'));
+      appendHTML(boxLine(' <span class="out-dim"> but never falls down."</span>'));
+    } else {
+      // Desktop content
+      appendHTML(boxLine('   <span class="out-dim">homelab:   </span><span class="out-exec">847 days · 0 incidents</span> <span class="out-faint">(real)</span>'));
+      appendHTML(boxLine('   <span class="out-dim">location:  </span>komaki, japan <span class="out-faint">· 35.29°N 136.92°E</span>'));
+      appendHTML(boxLine('   <span class="out-dim">status:    </span><span class="out-exec">● accepting connections</span>'));
+      appendHTML(boxBlank());
+      appendHTML(boxLine('   <span class="out-dim">"infrastructure is poetry that doesn\'t</span>'));
+      appendHTML(boxLine('   <span class="out-dim"> rhyme but never falls down."</span>'));
+    }
+
+    appendHTML(boxBlank());
+    appendHTML(boxBottom());
+    appendBlank();
+    appendHTML('<span class="out-dim">Last login: from an unknown timezone</span>');
+    appendHTML('<span class="out-dim">type </span><span class="cmd-link" data-cmd="help">help</span><span class="out-dim"> for commands · </span><span class="cmd-link" data-cmd="whoami">whoami</span><span class="out-dim"> · </span><span class="cmd-link" data-cmd="resume">resume</span><span class="out-dim"> · </span><span class="cmd-link" data-cmd="hire">hire</span>');
+    appendBlank();
+  }
+
+  })();
+  </script>
+</body>
+</html>

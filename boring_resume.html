@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luis Rocha — Cloud Infrastructure Engineer</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230c0a0d'/%3E%3Cpath d='M5 9 L11 16 L5 23' stroke='%23c4a7e7' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='14' y='20' width='12' height='2.5' rx='1' fill='%237dd3a8'/%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230c0a0d'/%3E%3Cpath d='M5 9 L11 16 L5 23' stroke='%23c4a7e7' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='14' y='20' width='12' height='2.5' rx='1' fill='%237dd3a8'/%3E%3C/svg%3E" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #2c3e50;
+      background: #fff;
+      padding: 48px 24px;
+    }
+    .container { max-width: 860px; margin: 0 auto; }
+
+    /* HEADER */
+    header { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 2px solid #2c3e50; }
+    h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 3px; }
+    .tagline { font-size: 13px; color: #555; margin-bottom: 10px; }
+    .contact { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: #555; }
+    .contact a { color: #2980b9; text-decoration: none; }
+    .contact a:hover { text-decoration: underline; }
+    .relocation { font-size: 12px; color: #888; margin-top: 6px; font-style: italic; }
+
+    /* SECTIONS */
+    section { margin-bottom: 28px; }
+    h2 {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      color: #888; border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 4px; margin-bottom: 14px;
+    }
+
+    /* PROFILE */
+    .profile { color: #444; line-height: 1.65; }
+
+    /* JOBS */
+    .job { margin-bottom: 18px; }
+    .job-header {
+      display: flex; justify-content: space-between;
+      align-items: baseline; flex-wrap: wrap; gap: 4px; margin-bottom: 1px;
+    }
+    .job-title { font-weight: 600; font-size: 13px; color: #1a1a1a; }
+    .job-dates { font-size: 12px; color: #888; white-space: nowrap; }
+    .job-company { font-size: 12px; color: #555; margin-bottom: 6px; }
+    .job-bullets { padding-left: 16px; margin-top: 4px; }
+    .job-bullets li { margin-bottom: 3px; color: #444; line-height: 1.5; }
+
+    /* SKILLS TABLE */
+    .skills-table { width: 100%; border-collapse: collapse; }
+    .skills-table tr { border-bottom: 1px solid #f0f0f0; }
+    .skills-table td { padding: 5px 8px 5px 0; vertical-align: top; }
+    .skills-table td:first-child {
+      font-weight: 600; color: #2c3e50;
+      white-space: nowrap; width: 140px; padding-right: 16px;
+    }
+    .skills-table td:last-child { color: #444; }
+
+    /* CERTS */
+    .cert { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; margin-bottom: 7px; }
+    .cert-name { font-weight: 500; color: #1a1a1a; }
+    .cert-date { font-size: 12px; color: #888; white-space: nowrap; }
+
+    /* EDUCATION */
+    .edu { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+    .edu-degree { font-weight: 500; color: #1a1a1a; }
+    .edu-school { font-size: 12px; color: #555; }
+    .edu-date { font-size: 12px; color: #888; white-space: nowrap; }
+
+    /* TOOLBAR */
+    .toolbar {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: #f8f8f8; border-bottom: 1px solid #e0e0e0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 24px; z-index: 100;
+    }
+    .toolbar-back {
+      font-size: 12px; color: #555; text-decoration: none;
+      display: flex; align-items: center; gap: 5px;
+      transition: color 0.15s;
+    }
+    .toolbar-back:hover { color: #2980b9; }
+    .btn-print {
+      background: #2c3e50; color: #fff; border: none;
+      font-size: 12px; font-weight: 600; padding: 7px 16px;
+      border-radius: 4px; cursor: pointer; letter-spacing: 0.3px;
+      transition: background 0.15s;
+    }
+    .btn-print:hover { background: #1a252f; }
+    body { padding-top: 56px; }
+
+    /* PRINT */
+    @media print {
+      .toolbar { display: none; }
+      body { padding: 20px 28px; font-size: 11px; }
+      .container { max-width: 100%; }
+      a[href^="http"]::after { content: ' (' attr(href) ')'; font-size: 10px; color: #888; }
+      a[href^="mailto"]::after { content: ' (' attr(href) ')'; font-size: 10px; color: #888; }
+      .job { page-break-inside: avoid; }
+      .cert { page-break-inside: avoid; }
+      .edu { page-break-inside: avoid; }
+      h2 { page-break-after: avoid; }
+    }
+    @media (max-width: 600px) {
+      .job-header { flex-direction: column; }
+      .skills-table td:first-child { width: auto; }
+      .toolbar { padding: 8px 14px; }
+    }
+  </style>
+</head>
+<body>
+<div class="toolbar">
+  <a class="toolbar-back" href="https://rochaluis.com">← rochaluis.com</a>
+  <button class="btn-print" onclick="window.print()">⎙ Save / Print as PDF</button>
+</div>
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <h1>Luis Paulo Lopes da Rocha</h1>
+    <p class="tagline">Infrastructure &amp; Automation Engineer</p>
+    <div class="contact">
+      <span>Komaki, Aichi, Japan</span>
+      <a href="mailto:luis@rochaluis.com">luis@rochaluis.com</a>
+      <a href="https://rochaluis.com">rochaluis.com</a>
+      <a href="https://github.com/rochaOps">github.com/rochaOps</a>
+      <a href="https://linkedin.com/in/rocha-luis">linkedin.com/in/rocha-luis</a>
+    </div>
+    <p class="relocation">Open to remote roles and relocation.</p>
+  </header>
+
+  <!-- PROFILE -->
+  <section>
+    <h2>Professional Summary</h2>
+    <p class="profile">
+      Linux systems engineer with 6+ years operating and automating infrastructure under real constraints. Background spans on-premises sysadmin, hybrid AWS integration, and a self-hosted homelab running 50+ containerised services with full observability and IDS. Builds AI-assisted automation tooling (FastAPI, Claude API, Telegram) for practical problems. AWS SAA-C03 in progress (60%). Bilingual Portuguese/English; working Japanese. Open to remote infrastructure roles and EU relocation.
+    </p>
+  </section>
+
+  <!-- EXPERIENCE -->
+  <section>
+    <h2>Professional Experience</h2>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-title">Production Team Leader &nbsp;·&nbsp; Brexa</span>
+        <span class="job-dates">May 2024 – Present</span>
+      </div>
+      <div class="job-company">Komaki, Aichi, Japan &nbsp;·&nbsp; Precision manufacturing &nbsp;·&nbsp; Japanese-language environment</div>
+      <ul class="job-bullets">
+        <li>Lead a multilingual team across alternating shifts, managing output targets, quality checkpoints, and safety compliance in direct coordination with Japanese management.</li>
+        <li>Applied structured incident documentation and deviation escalation workflows — disciplines directly transferable to IT operations and on-call incident management.</li>
+        <li>Developed professional Japanese proficiency through 5+ years of full immersion in a Japanese-speaking workplace.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-title">Production Operator &nbsp;·&nbsp; Avance Corporation</span>
+        <span class="job-dates">Mar 2020 – May 2024</span>
+      </div>
+      <div class="job-company">Komaki, Aichi, Japan &nbsp;·&nbsp; Career relocation during global pandemic</div>
+      <ul class="job-bullets">
+        <li>Operated automated industrial machinery across 4 years with zero lost-time incidents in a high-discipline manufacturing environment.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-title">IT Support Analyst &amp; System Administrator &nbsp;·&nbsp; Clínica Jamal</span>
+        <span class="job-dates">Mar 2013 – Feb 2019</span>
+      </div>
+      <div class="job-company">São Paulo, Brazil &nbsp;·&nbsp; Private healthcare group &nbsp;·&nbsp; Sole IT responsible across HQ and two branch locations</div>
+      <ul class="job-bullets">
+        <li>Sole IT professional responsible for the full technology stack serving 17 staff users and 30+ endpoints including medical workstations, polysomnography data acquisition systems, CCTV, and shared imaging equipment.</li>
+        <li>Administered Windows Server with Active Directory, DNS, DHCP, and Group Policy; deployed VMware ESXi (free tier) to extend server capacity beyond physical licensing limits.</li>
+        <li>Built and maintained a Samba-based Linux file server integrated into the AD environment for transparent user access.</li>
+        <li>Designed and implemented VLAN segmentation to isolate clinical departments and restrict lateral traffic between sectors.</li>
+        <li>Deployed Cacti with SNMP polling for proactive monitoring of network devices and server availability.</li>
+        <li>Managed CCTV, Level 1 PABX support, Wi-Fi access control, and end-user account lifecycle management.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-title">Industrial Automation Technician &nbsp;·&nbsp; Compact Automação Industrial</span>
+        <span class="job-dates">Oct 2009 – Jul 2012</span>
+      </div>
+      <div class="job-company">São Bernardo do Campo, Brazil &nbsp;·&nbsp; Industrial automation integrator &nbsp;·&nbsp; Intern promoted to technician</div>
+      <ul class="job-bullets">
+        <li>Developed and commissioned PLC programs for Siemens S7 and Rockwell Allen-Bradley controllers across automotive and manufacturing client sites.</li>
+        <li>Built SCADA/HMI applications using Elipse E3 supervisory software; designed and assembled electrical control panels; authored technical documentation.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- KEY PROJECTS -->
+  <section>
+    <h2>Key Projects</h2>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-title">Home Lab — Production-Grade Self-Hosted Infrastructure</span>
+        <span class="job-dates">2022 – Present</span>
+      </div>
+      <div class="job-company">Komaki, Japan &nbsp;·&nbsp; <a href="https://github.com/rochaOps/homelab">github.com/rochaOps/homelab</a> &nbsp;·&nbsp; rochaluis.com</div>
+      <ul class="job-bullets">
+        <li>Operates a multi-subnet SMB-equivalent environment on OPNsense 26.1 with Intel I350-T4 quad-port NIC; 5 VLANs with per-zone firewall rules, DHCP scopes, and DNS enforcement.</li>
+        <li>Suricata IDS in PCAP mode on all interfaces with ET Open and abuse.ch rulesets; WireGuard VPN with Cloudflare DDNS for secure remote access.</li>
+        <li>Full observability stack: Prometheus + Grafana + Loki + Vector (OPNsense filterlog + Suricata EVE JSON + Docker logs) + cAdvisor + SNMP Exporter + Node Exporter.</li>
+        <li>15+ Docker services managed via Docker Compose: Nginx reverse proxy, WordPress, Synapse Matrix, Vaultwarden, Jellyfin, AdGuard Home, Umbrel/Bitcoin node, Sonarr/Radarr/Prowlarr, full monitoring stack.</li>
+        <li>Infrastructure provisioned and managed with Docker Compose — all configuration versioned in Git and documented in public repository.</li>
+        <li>Automated NFS backup to Synology DS220+ NAS with per-service retention policies, disaster recovery runbook, and regular restore testing.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-title">SLAC — Hybrid Cloud Infrastructure &nbsp;·&nbsp; Freelance</span>
+        <span class="job-dates">2015 – 2016</span>
+      </div>
+      <div class="job-company">Sociedade Latino-Americana de Coaching &nbsp;·&nbsp; São Paulo + AWS &nbsp;·&nbsp; End-to-end design and delivery</div>
+      <ul class="job-bullets">
+        <li>Architected hybrid environment connecting on-premises to AWS EC2 via OpenVPN site-to-site; deployed VMware ESXi hosting three VMs: Linux firewall/VPN, Windows Server 2008 TMG proxy, Windows Server 2012 AD/DNS/DHCP.</li>
+        <li>Configured dual Active Directory domain controllers (on-premises + AWS EC2) with replication; DFS Replication for nightly file sync with bandwidth throttling over 15 Mbps WAN.</li>
+        <li>WDS/PXE unattended OS deployment from golden image — full workstation provisioning via network boot in under 15 minutes.</li>
+        <li>Configured HP 1920 (L3) + HP 1820 switching with VLAN segmentation and DHCP relay; produced full infrastructure documentation covering topology, AD, GPO, VPN, backup, and DR procedures.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="job-header">
+        <span class="job-title">AFV Brasil — Multi-Site AWS Hosting Platform &nbsp;·&nbsp; Freelance</span>
+        <span class="job-dates">2014 – 2015</span>
+      </div>
+      <div class="job-company">AWS EC2 &nbsp;·&nbsp; Multi-client web hosting infrastructure</div>
+      <ul class="job-bullets">
+        <li>Provisioned and managed EC2 with Elastic IP hosting multiple client websites; Security Groups as perimeter firewall; Route 53 for all client DNS.</li>
+        <li>Built custom AMI with Nginx + PHP + WordPress + caching stack; Nginx reverse proxy for multi-client routing; S3 for static assets and backups; SSH access and Linux permissions for webdesigner team.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- TECHNICAL SKILLS -->
+  <section>
+    <h2>Technical Skills</h2>
+    <table class="skills-table">
+      <tr>
+        <td>Cloud</td>
+        <td>AWS (EC2, S3, VPC, IAM, Route 53, Security Groups, CloudWatch, Lambda, RDS)</td>
+      </tr>
+      <tr>
+        <td>Automation</td>
+        <td>GitHub Actions &nbsp;·&nbsp; Bash &nbsp;·&nbsp; Git &nbsp;·&nbsp; AI-assisted development (Python logic + Claude)</td>
+      </tr>
+      <tr>
+        <td>Containers</td>
+        <td>Docker &nbsp;·&nbsp; Docker Compose &nbsp;·&nbsp; Nginx reverse proxy</td>
+      </tr>
+      <tr>
+        <td>OS &amp; Servers</td>
+        <td>Linux (Debian/Ubuntu) &nbsp;·&nbsp; Windows Server &nbsp;·&nbsp; Active Directory &nbsp;·&nbsp; DNS &nbsp;·&nbsp; DHCP &nbsp;·&nbsp; Group Policy &nbsp;·&nbsp; Samba</td>
+      </tr>
+      <tr>
+        <td>Networking</td>
+        <td>OPNsense/pfSense &nbsp;·&nbsp; VLANs &nbsp;·&nbsp; Routing &nbsp;·&nbsp; Cisco/HP switches &nbsp;·&nbsp; WireGuard &nbsp;·&nbsp; OpenVPN &nbsp;·&nbsp; Suricata IDS &nbsp;·&nbsp; Firewall</td>
+      </tr>
+      <tr>
+        <td>Virtualisation</td>
+        <td>VMware ESXi &nbsp;·&nbsp; Docker &nbsp;·&nbsp; VM lifecycle (create, snapshot, clone, restore)</td>
+      </tr>
+      <tr>
+        <td>Monitoring</td>
+        <td>Prometheus &nbsp;·&nbsp; Grafana &nbsp;·&nbsp; Loki &nbsp;·&nbsp; Vector &nbsp;·&nbsp; cAdvisor &nbsp;·&nbsp; Node Exporter &nbsp;·&nbsp; SNMP Exporter &nbsp;·&nbsp; Cacti</td>
+      </tr>
+      <tr>
+        <td>Security</td>
+        <td>VLAN segmentation &nbsp;·&nbsp; Suricata IDS &nbsp;·&nbsp; WireGuard/OpenVPN &nbsp;·&nbsp; SSH key management &nbsp;·&nbsp; Cloudflare SSL</td>
+      </tr>
+      <tr>
+        <td>Other</td>
+        <td>Vaultwarden &nbsp;·&nbsp; AdGuard Home &nbsp;·&nbsp; Synology NAS &nbsp;·&nbsp; Siemens S7 PLC &nbsp;·&nbsp; Elipse E3 SCADA &nbsp;·&nbsp; SAP ECC 6.0</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- CERTIFICATIONS -->
+  <section>
+    <h2>Certifications</h2>
+    <div class="cert">
+      <span class="cert-name">AWS Solutions Architect – Associate (SAA-C03) — In Progress (60%)</span>
+      <span class="cert-date">Expected Jun 2026 &nbsp;·&nbsp; Amazon Web Services</span>
+    </div>
+    <div class="cert">
+      <span class="cert-name">Microsoft Official Course 20410 — Installing &amp; Configuring Windows Server 2012</span>
+      <span class="cert-date">Mar 2016 &nbsp;·&nbsp; Microsoft</span>
+    </div>
+    <div class="cert">
+      <span class="cert-name">Microsoft Office Excel — Advanced</span>
+      <span class="cert-date">Feb 2017 &nbsp;·&nbsp; Microsoft Partner</span>
+    </div>
+    <div class="cert">
+      <span class="cert-name">Hardware &amp; Network Maintenance</span>
+      <span class="cert-date">Jun 2011 &nbsp;·&nbsp; Microlins</span>
+    </div>
+  </section>
+
+  <!-- EDUCATION -->
+  <section>
+    <h2>Education</h2>
+    <div class="edu">
+      <div>
+        <div class="edu-degree">Bachelor of Electrical Engineering — Electronics</div>
+        <div class="edu-school">Universidade Paulista (UNIP) &nbsp;·&nbsp; São Paulo, Brazil</div>
+      </div>
+      <span class="edu-date">Graduated Jan 2018</span>
+    </div>
+    <div class="edu">
+      <div>
+        <div class="edu-degree">Technical Diploma — Industrial Automation</div>
+        <div class="edu-school">SENAI Almirante Tamandaré &nbsp;·&nbsp; São Bernardo do Campo, Brazil</div>
+      </div>
+      <span class="edu-date">Completed Jul 2011</span>
+    </div>
+  </section>
+
+  <!-- LANGUAGES -->
+  <section>
+    <h2>Languages</h2>
+    <table class="skills-table">
+      <tr>
+        <td>Portuguese</td>
+        <td>Native</td>
+      </tr>
+      <tr>
+        <td>English</td>
+        <td>Upper-Intermediate (B2) — professional working proficiency</td>
+      </tr>
+      <tr>
+        <td>Japanese</td>
+        <td>Working proficiency — JLPT N5, progressing toward N4</td>
+      </tr>
+    </table>
+  </section>
+
+</div>
+</body>
+</html>
